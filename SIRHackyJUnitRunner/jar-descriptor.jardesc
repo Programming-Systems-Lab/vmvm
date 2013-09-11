@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="US-ASCII" standalone="no"?>
+<jardesc>
+    <jar path="/Volumes/Waldorf/sirRunner.jar"/>
+    <options buildIfNeeded="true" compress="false" descriptionLocation="/SIRHackyJUnitRunner/jar-descriptor.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="/VMVM/META-INF/MANIFEST.MF" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+        <file path="/SIRHackyJUnitRunner/jar-descriptor.jardesc"/>
+        <file path="/SIRHackyJUnitRunner/.project"/>
+        <file path="/SIRHackyJUnitRunner/junit.jar"/>
+        <file path="/SIRHackyJUnitRunner/.classpath"/>
+        <javaElement handleIdentifier="=SIRHackyJUnitRunner/src"/>
+    </selectedElements>
+</jardesc>

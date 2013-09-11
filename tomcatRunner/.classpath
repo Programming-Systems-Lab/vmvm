@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/VMVM">
+		<accessrules>
+			<accessrule kind="nonaccessible" pattern="org/junit"/>
+		</accessrules>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/jon/Documents/PSL/Projects/in-vivo/vmvm/lib/asm-all-4.1.jar"/>
+	<classpathentry kind="lib" path="/Users/jon/Documents/PSL/Projects/in-vivo/vmvm/lib/objenesis-1.2.jar"/>
+	<classpathentry kind="lib" path="/VMVM/samples/commons-lang/target/classes"/>
+	<classpathentry kind="lib" path="/VMVM/samples/commons-lang/target/test-classes"/>
+	<classpathentry kind="lib" path="/VMVM/samples/commons-lang/target/tests"/>
+	<classpathentry kind="lib" path="junit.jar" sourcepath="/Users/jon/.m2/repository/junit/junit/4.10/junit-4.10-sources.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Tomcat 7.0"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/classes/all" sourcepath="/VMVM/samples/ivy/src/java"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/classes/ant"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/classes/bootstrap"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/classes/core" sourcepath="/VMVM/samples/ivy/src/java"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/classes/optional"/>
+	<classpathentry kind="lib" path="/VMVM/samples/ivy/build/test" sourcepath="/VMVM/samples/ivy/test"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/mockito"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/nutch"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
+

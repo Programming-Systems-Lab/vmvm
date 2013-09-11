@@ -13,8 +13,9 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -22,7 +23,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 
 public class FSDetector {
-	private static Logger			logger						= Logger.getLogger(FSDetector.class);
+	private static Logger			logger						= Logger.getLogger("edu.columbia.cs.psl.vmvm");
 	
 	public static HashSet<String> fsMethods = new HashSet<String>();
 	public static HashMap<String, ClassNode> classInfo = new HashMap<String, ClassNode>();
@@ -203,12 +204,12 @@ public class FSDetector {
 			r += "--";
 		if (mi == null) {
 			r += ("NULL!!!!!!!!!->" + fallback);
-			logger.error(r);
+			logger.log(Level.SEVERE,r);
 			return;
 
 		}
 
-		logger.error(r + mi.getFullName() + " [" + (mi.isFSTaint() ? "NA" : "") + (mi.isFSTaint() ? "ND" : "") + "]");
+		logger.log(Level.SEVERE,r + mi.getFullName() + " [" + (mi.isFSTaint() ? "NA" : "") + (mi.isFSTaint() ? "ND" : "") + "]");
 		if (!alreadyPrinted.contains(mi.getFullName())) {
 			alreadyPrinted.add(mi.getFullName());
 			for (String s : mi.functionsThatICall)

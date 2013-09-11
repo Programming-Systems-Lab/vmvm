@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="MacRoman" standalone="no"?>
+<jardesc>
+    <jar path="VMVM/vmvm.jar"/>
+    <options buildIfNeeded="true" compress="false" descriptionLocation="/VMVM/jar-descriptor.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="false" manifestLocation="/VMVM/META-INF/MANIFEST.MF" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+        <javaElement handleIdentifier="=VMVM/src&lt;com.rits.cloning"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.mvs"/>
+        <file path="/VMVM/core-fs.txt"/>
+        <file path="/VMVM/fs-output-methods.txt"/>
+        <file path="/VMVM/all-methods.txt"/>
+        <file path="/VMVM/allfile"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;"/>
+        <file path="/VMVM/.gitignore"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.agent"/>
+        <file path="/VMVM/.project"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.eval"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.struct"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.struct"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm"/>
+        <file path="/VMVM/fs-methods.txt"/>
+        <file path="/VMVM/network-methods.txt"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.chroot"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm"/>
+        <file path="/VMVM/.classpath"/>
+    </selectedElements>
+</jardesc>

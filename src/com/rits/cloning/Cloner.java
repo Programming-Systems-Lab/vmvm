@@ -423,7 +423,7 @@ public class Cloner
 		final Class<T> clz = (Class<T>) o.getClass();
 		if (clz.isEnum()) return o;
 		// skip cloning ignored classes
-		if (nullInstead.contains(clz)) return null;
+//		if (nullInstead.contains(clz)) return null;
 		if (ignored.contains(clz)) return o;
 		if (isImmutable(clz)) return o;
 		if (isIgnored(clz)) return o;
@@ -489,6 +489,7 @@ public class Cloner
 						field.set(newInstance, sandboxField);
 					else
 					{
+
 						final Object fieldObject = field.get(o);
 						final boolean shouldClone = cloneSynthetics || (!cloneSynthetics && !field.isSynthetic());
 						final Object fieldObjectClone = clones != null ? (shouldClone ? cloneInternal(fieldObject, clones, sandboxField) : fieldObject) : fieldObject;
@@ -497,7 +498,7 @@ public class Cloner
 						{
 							System.out.println("cloned field>" + field + "  -- of class " + o.getClass());
 						}
-					}
+					}	
 				}
 			}
 		}

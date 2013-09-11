@@ -1,58 +1,22 @@
-java/net/DatagramPacket.init:()V
-java/net/Inet4Address.init:()V
-java/net/Inet4AddressImpl.getHostByAddr:([B)Ljava/lang/String;
-java/net/Inet4AddressImpl.getLocalHostName:()Ljava/lang/String;
-java/net/Inet4AddressImpl.isReachable0:([BI[BI)Z
-java/net/Inet4AddressImpl.lookupAllHostAddr:(Ljava/lang/String;)[Ljava/net/InetAddress;
-java/net/Inet6Address.init:()V
-java/net/Inet6AddressImpl.getHostByAddr:([B)Ljava/lang/String;
-java/net/Inet6AddressImpl.getLocalHostName:()Ljava/lang/String;
-java/net/Inet6AddressImpl.isReachable0:([BII[BII)Z
-java/net/Inet6AddressImpl.lookupAllHostAddr:(Ljava/lang/String;)[Ljava/net/InetAddress;
-java/net/InetAddress.init:()V
-java/net/InetAddressImplFactory.isIPv6Supported:()Z
-java/net/NetworkInterface.getAll:()[Ljava/net/NetworkInterface;
-java/net/NetworkInterface.getByIndex0:(I)Ljava/net/NetworkInterface;
-java/net/NetworkInterface.getByInetAddress0:(Ljava/net/InetAddress;)Ljava/net/NetworkInterface;
-java/net/NetworkInterface.getByName0:(Ljava/lang/String;)Ljava/net/NetworkInterface;
-java/net/NetworkInterface.getMTU0:(Ljava/lang/String;I)I
-java/net/NetworkInterface.getMacAddr0:([BLjava/lang/String;I)[B
-java/net/NetworkInterface.init:()V
-java/net/NetworkInterface.isLoopback0:(Ljava/lang/String;I)Z
-java/net/NetworkInterface.isP2P0:(Ljava/lang/String;I)Z
-java/net/NetworkInterface.isUp0:(Ljava/lang/String;I)Z
-java/net/NetworkInterface.supportsMulticast0:(Ljava/lang/String;I)Z
-java/net/PlainDatagramSocketImpl.bind0:(ILjava/net/InetAddress;)V
-java/net/PlainDatagramSocketImpl.connect0:(Ljava/net/InetAddress;I)V
-java/net/PlainDatagramSocketImpl.datagramSocketClose:()V
-java/net/PlainDatagramSocketImpl.datagramSocketCreate:()V
-java/net/PlainDatagramSocketImpl.disconnect0:(I)V
-java/net/PlainDatagramSocketImpl.getTTL:()B
-java/net/PlainDatagramSocketImpl.getTimeToLive:()I
-java/net/PlainDatagramSocketImpl.init:()V
-java/net/PlainDatagramSocketImpl.join:(Ljava/net/InetAddress;Ljava/net/NetworkInterface;)V
-java/net/PlainDatagramSocketImpl.leave:(Ljava/net/InetAddress;Ljava/net/NetworkInterface;)V
-java/net/PlainDatagramSocketImpl.peek:(Ljava/net/InetAddress;)I
-java/net/PlainDatagramSocketImpl.peekData:(Ljava/net/DatagramPacket;)I
-java/net/PlainDatagramSocketImpl.receive0:(Ljava/net/DatagramPacket;)V
-java/net/PlainDatagramSocketImpl.send:(Ljava/net/DatagramPacket;)V
-java/net/PlainDatagramSocketImpl.setTTL:(B)V
-java/net/PlainDatagramSocketImpl.setTimeToLive:(I)V
-java/net/PlainDatagramSocketImpl.socketGetOption:(I)Ljava/lang/Object;
-java/net/PlainDatagramSocketImpl.socketSetOption:(ILjava/lang/Object;)V
-java/net/PlainSocketImpl.initProto:()V
-java/net/PlainSocketImpl.socketAccept:(Ljava/net/SocketImpl;)V
-java/net/PlainSocketImpl.socketAvailable:()I
-java/net/PlainSocketImpl.socketBind:(Ljava/net/InetAddress;I)V
-java/net/PlainSocketImpl.socketClose0:(Z)V
-java/net/PlainSocketImpl.socketConnect:(Ljava/net/InetAddress;II)V
-java/net/PlainSocketImpl.socketCreate:(Z)V
-java/net/PlainSocketImpl.socketGetOption:(ILjava/lang/Object;)I
-java/net/PlainSocketImpl.socketListen:(I)V
-java/net/PlainSocketImpl.socketSendUrgentData:(I)V
-java/net/PlainSocketImpl.socketSetOption:(IZLjava/lang/Object;)V
-java/net/PlainSocketImpl.socketShutdown:(I)V
-java/net/SocketInputStream.init:()V
-java/net/SocketInputStream.socketRead0:(Ljava/io/FileDescriptor;[BIII)I
-java/net/SocketOutputStream.init:()V
-java/net/SocketOutputStream.socketWrite0:(Ljava/io/FileDescriptor;[BII)V
+java/net/Socket.<init>(Ljava/lang/String;I)V	0
+java/net/Socket.<init>(Ljava/lang/String;ILjava/net/InetAddress;I)V	0
+java/net/Socket.<init>(Ljava/lang/String;IZ)V	0
+java/net/Socket.<init>(Ljava/net/InetAddress;I)V	0
+java/net/Socket.<init>(Ljava/net/InetAddress;ILjava/net/InetAddress;I)V	0
+java/net/Socket.<init>(Ljava/net/InetAddress;IZ)V	0
+java/net/Socket.bind(Ljava/net/SocketAddress;)V	0
+java/net/Socket.connect(Ljava/net/SocketAddress;)V	0
+java/net/Socket.connect(Ljava/net/SocketAddress;I)V	0
+javax/net/SocketFactory.createSocket(Ljava/lang/String;I)Ljava/net/Socket;	0
+javax/net/SocketFactory.createSocket(Ljava/lang/String;ILjava/net/InetAddress;I)Ljava/net/Socket;	0
+javax/net/SocketFactory.createSocket(Ljava/net/InetAddress;I)Ljava/net/Socket;	0
+javax/net/SocketFactory.createSocket(Ljava/net/InetAddress;ILjava/net/InetAddress;I)Ljava/net/Socket;	0
+java/net/DatagramSocket.<init>(ILjava/net/InetAddress;)V	1
+java/net/DatagramSocket.<init>(Ljava/net/SocketAddress;)V	0
+java/net/DatagramSocket.bind(Ljava/net/SocketAddress;)V	0
+java/net/DatagramSocket.connect(Ljava/net/InetAddress;I)V	0
+java/net/DatagramSocket.connect(Ljava/net/SocketAddress;)V	0
+java/nio/channels/SocketChannel.bind(Ljava/net/SocketAddress;)Ljava/nio/channels/NetworkChannel;	0
+java/nio/channels/SocketChannel.bind(Ljava/net/SocketAddress;)Ljava/nio/channels/SocketChannel;	0
+java/nio/channels/SocketChannel.connect(Ljava/net/SocketAddress;)Z	0
+java/nio/channels/SocketChannel.open(Ljava/net/SocketAddress;)Ljava/nio/channels/SocketChannel;	0

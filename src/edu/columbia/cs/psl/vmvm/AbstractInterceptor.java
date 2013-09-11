@@ -190,16 +190,16 @@ public abstract class AbstractInterceptor implements Constants{
 
 	private static Cloner cloner = new Cloner();
 
-	public static <T> T shallowClone(T obj) {
-		T ret = cloner.shallowClone(obj);
-		COWAInterceptor.setIsAClonedObject(ret);
-		return ret;
-	}
-
-	public static <T> T deepClone(T obj) {
-		T ret = cloner.deepClone(obj);
-		return ret;
-	}
+//	public static <T> T shallowClone(T obj) {
+//		T ret = cloner.shallowClone(obj);
+//		COWAInterceptor.setIsAClonedObject(ret);
+//		return ret;
+//	}
+//
+//	public static <T> T deepClone(T obj) {
+//		T ret = cloner.deepClone(obj);
+//		return ret;
+//	}
 
 	public final void __onExit(Object val, int op, int id) {
 		onExit(val, op, id);

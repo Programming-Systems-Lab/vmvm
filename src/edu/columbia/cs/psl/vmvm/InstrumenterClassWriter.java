@@ -1,13 +1,13 @@
 package edu.columbia.cs.psl.vmvm;
 
 import java.net.URLClassLoader;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 public class InstrumenterClassWriter extends ClassWriter {
-	private static Logger logger = Logger.getLogger(InstrumenterClassWriter.class);
+	private static Logger logger = Logger.getLogger("edu.columbia.cs.psl.vmvm.InstrumenterClassWriter");
 	private ClassLoader loader;
 	public InstrumenterClassWriter(ClassReader classReader, int flags, ClassLoader loader) {
 		super(classReader, flags);
@@ -26,7 +26,7 @@ public class InstrumenterClassWriter extends ClassWriter {
             c = Class.forName(type1.replace('/', '.'), false, loader);
             d = Class.forName(type2.replace('/', '.'), false, loader);
         } catch (ClassNotFoundException e) {
-        	logger.debug("Error while finding common super class for " + type1 +"; " + type2,e);
+//        	logger.debug("Error while finding common super class for " + type1 +"; " + type2,e);
         	return "java/lang/Object";
 //        	throw new RuntimeException(e);
         }
