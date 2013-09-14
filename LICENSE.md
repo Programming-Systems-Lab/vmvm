@@ -12,5 +12,4 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 This project makes use of the following libraries:
 * [ASM](http://asm.ow2.org/license.html), (c) 2000-2011 INRIA, France Telecom, [license](http://asm.ow2.org/license.html)
-* [Objenesis](http://code.google.com/p/objenesis/), © 2006-2012, Joe Walnes, Henri Tremblay and Leonardo Mesquita, released under the Apache License 2.0
 * [Log4j](http://logging.apache.org/log4j/), (c) 1999-2012, Apache Software Foundation, released under the Apache License 2.0

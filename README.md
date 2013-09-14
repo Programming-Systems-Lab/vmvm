@@ -74,7 +74,6 @@ Acknowledgements
 -----
 This project makes use of the following libraries:
 * [ASM](http://asm.ow2.org/license.html), (c) 2000-2011 INRIA, France Telecom, [license](http://asm.ow2.org/license.html)
-* [Objenesis](http://code.google.com/p/objenesis/), © 2006-2012, Joe Walnes, Henri Tremblay and Leonardo Mesquita, released under the Apache License 2.0
 * [Log4j](http://logging.apache.org/log4j/), (c) 1999-2012, Apache Software Foundation, released under the Apache License 2.0
 
 The authors of this software are [Jonathan Bell](http://jonbell.net) and [Gail Kaiser](http://www.cs.columbia.edu/~kaiser/). The authors are members of the [Programming Systems Laboratory](http://www.psl.cs.columbia.edu/), funded in part by NSF CCF-1161079, NSF CNS-0905246, and NIH U54 CA121852.
