@@ -3,7 +3,6 @@ package edu.columbia.cs.psl.vmvm;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.rits.cloning.Cloner;
 
 public abstract class AbstractInterceptor implements Constants{
 	private Object interceptedObject;
@@ -188,7 +187,7 @@ public abstract class AbstractInterceptor implements Constants{
 
 	protected static final AtomicInteger nextId = new AtomicInteger(1);
 
-	private static Cloner cloner = new Cloner();
+//	private static Cloner cloner = new Cloner();
 
 //	public static <T> T shallowClone(T obj) {
 //		T ret = cloner.shallowClone(obj);

@@ -1,29 +1,21 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
 import org.objectweb.asm.commons.LocalVariablesSorter;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 
-import edu.columbia.cs.psl.vmvm.CloningUtils;
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
-import edu.columbia.cs.psl.vmvm.VMState;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
-import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
 

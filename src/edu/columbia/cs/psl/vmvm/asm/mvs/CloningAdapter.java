@@ -8,7 +8,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import edu.columbia.cs.psl.vmvm.CloningUtils;
 
 public class CloningAdapter extends InstructionAdapter implements Opcodes {
 
@@ -67,70 +66,7 @@ public class CloningAdapter extends InstructionAdapter implements Opcodes {
 
 	private void _generateClone(String typeOfField, String debug, boolean secondElHasArrayLen) {
 		Type fieldType = Type.getType(typeOfField);
-//		println("Generate clone: "+ debug);
-		if (
-		// fieldType.getSort() == Type.ARRAY &&
-		// fieldType.getElementType().getSort()
-		// ||
-		fieldType.getSort() == Type.VOID || (fieldType.getSort() != Type.ARRAY && (fieldType.getSort() != Type.OBJECT || immutableClasses.contains(typeOfField)))) {
-			//			 println("reference> " + debug);
-			return;
-		}
-		if (fieldType.getSort() == Type.ARRAY) {
-			if (fieldType.getElementType().getSort() != Type.OBJECT || immutableClasses.contains(fieldType.getElementType().getDescriptor())) {
-				//				 println("array> " + debug);
 
-				// Just need to duplicate the array
-				dup();
-				Label nullContinue = new Label();
-				visitJumpInsn(IFNULL, nullContinue);
-				if (secondElHasArrayLen) {
-					swap();
-				} else {
-					dup();
-					visitInsn(ARRAYLENGTH);
-				}
-				dup();
-				newarray(Type.getType(fieldType.getDescriptor().substring(1)));
-				dupX2();
-				swap();
-
-				iconst(0);
-				dupX2();
-				swap();
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V");
-				Label noNeedToPop = new Label();
-				if (secondElHasArrayLen) {
-					visitJumpInsn(GOTO, noNeedToPop);
-					visitLabel(nullContinue);
-					swap();
-					pop();
-				} else {
-					visitLabel(nullContinue);
-				}
-
-				visitLabel(noNeedToPop);
-
-			} else {
-				// println("heavy> " + debug);
-				// Just use the reflective cloner
-				visitLdcInsn(debug);
-//				getSandboxFlag();
-				invokestatic(Type.getType(CloningUtils.class).getInternalName(), "clone", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
-				//				invokeStatic(Type.getType(CloningUtils.class), Method.getMethod("Object clone(Object, String, int)"));
-				checkcast(fieldType);
-			}
-		} else if (fieldType.getClassName().contains("InputStream") || fieldType.getClassName().contains("OutputStream") || fieldType.getClassName().contains("Socket")) {
-			// Do nothing
-		} else {
-			// println("heavy> " + debug);
-			visitLdcInsn(debug);
-//			getSandboxFlag();
-			visitMethodInsn(INVOKESTATIC,Type.getType(CloningUtils.class).getInternalName(), "clone", "(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;");
-			//			invokeStatic(Type.getType(CloningUtils.class), Method.getMethod("Object clone(Object, String, int)"));
-			checkcast(fieldType);
-
-		}
 //		println("Complete clone: " + debug);
 	}
 }
