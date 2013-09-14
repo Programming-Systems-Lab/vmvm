@@ -1,0 +1,44 @@
+java/awt/AWTEventMulticaster	add	remove	.	.	
+java/awt/KeyboardFocusManager			setCurrentKeyboardFocusManager	getCurrentKeyboardFocusManager
+java/beans/Introspector			setBeanInfoSearchPath	getBeanInfo,getBeanInfoSearchPath
+java/beans/PropertyEditorManager			setEditorSearchPath	getEditorSearchPath
+java/lang/System			setOut,setIn,setProperties,setSecurityManager,setProperty,setErr	getenv,getSecurityManager,getProperty,getProperties
+java/lang/Thread			setDefaultUncaughtExceptionHandler	getDefaultUncaughtExceptionHandler,getAllStackTraces
+java/net/CookieHandler			setDefault	getDefault
+java/net/HttpURLConnection				setFollowRedirects	getFollowRedirects
+java/net/ProxySelector			setDefault	getDefault
+java/net/ResponseCache			setDefault	getDefault
+java/net/URLConnection			setContentHandlerFactory,setFileNameMap,setDefaultAllowUserInteraction,setDefaultRequestProperty	getDefaultRequestProperty,getDefaultAllowUserInteraction,getFileNameMap
+java/rmi/activation/ActivationGroup			setSystem	getSystem
+java/rmi/server/LogStream			setDefaultStream	getDefaultStream
+java/rmi/server/RMISocketFactory			setFailureHandler,setSocketFactory	getSocketFactory,getDefaultSocketFactory,getFailureHandler
+java/rmi/server/RemoteServer			setLog	getClientHost,getLog
+java/security/Policy			setPolicy	getPolicy,getInstance
+java/security/Security	addProvider	removeProvider	setProperty	getAlgorithmProperty,getProvider,getAlgorithms,getProperty,getProviders
+java/sql/DriverManager			setLoginTimeout,setLogStream,setLogWriter	getDriver,getDrivers,getLogWriter,getLoginTimeout,getLogStream,getConnection
+java/util/Locale			setDefault	getDefault,getAvailableLocales,getISOLanguages,getISOCountries
+java/util/TimeZone			setDefault	getTimeZone,getAvailableIDs,getDefault
+javax/activation/CommandMap			setDefaultCommandMap	getDefaultCommandMap
+javax/activation/FileTypeMap			setDefaultFileTypeMap	getDefaultFileTypeMap
+javax/imageio/ImageIO			setUseCache,setCacheDirectory	getWriterFileSuffixes,getReaderFormatNames,getImageWriters,getImageWritersBySuffix,getImageWritersByMIMEType,getReaderFileSuffixes,getImageWriter,getUseCache,getImageReadersBySuffix,getWriterMIMETypes,getImageReadersByMIMEType,getImageTranscoders,getImageReaders,getReaderMIMETypes,getImageReader,getCacheDirectory,getImageWritersByFormatName,getWriterFormatNames,getImageReadersByFormatName
+javax/naming/spi/NamingManager			setInitialContextFactoryBuilder,setObjectFactoryBuilder	getContinuationContext,getObjectInstance,getURLContext,getStateToBind,getInitialContext
+javax/net/ssl/HttpsURLConnection			setDefaultSSLSocketFactory,setDefaultHostnameVerifier	getDefaultSSLSocketFactory,getDefaultHostnameVerifier
+javax/net/ssl/SSLContext			setDefault	getDefault,getInstance
+javax/security/auth/Policy			setPolicy	getPolicy
+javax/security/auth/login/Configuration			setConfiguration	getConfiguration,getInstance
+javax/sql/rowset/spi/SyncFactory			setLogger,setJNDIContext	getSyncFactory,getLogger,getRegisteredProviders,getInstance
+javax/swing/FocusManager			setCurrentManager	getCurrentManager
+javax/swing/JComponent			setDefaultLocale	getDefaultLocale
+javax/swing/JOptionPane			setRootFrame	getDesktopPaneForComponent,getFrameForComponent,getRootFrame
+javax/swing/JPopupMenu			setDefaultLightWeightPopupEnabled	getDefaultLightWeightPopupEnabled
+javax/swing/KeyboardManager			setCurrentManager	getCurrentManager
+javax/swing/LayoutStyle			setInstance	getInstance
+javax/swing/PopupFactory			setSharedInstance	getSharedInstance
+javax/swing/Timer			setLogTimers	getLogTimers
+javax/swing/UIManager	addPropertyChangeListener,addAuxiliaryLookAndFeel	removePropertyChangeListener,removeAuxiliaryLookAndFeel	setLookAndFeel,setInstalledLookAndFeels	getDefaults,getPropertyChangeListeners,getInstalledLookAndFeels,getColor,get,getInt,getInsets,getBoolean,getAuxiliaryLookAndFeels,getBorder,getDimension,getLookAndFeelDefaults,getIcon,getFont,getLookAndFeel,getCrossPlatformLookAndFeelClassName,getString,getUI,getSystemLookAndFeelClassName
+javax/swing/plaf/nimbus/EffectUtils			setPixels	getPixels
+javax/swing/plaf/synth/SynthLookAndFeel			setStyleFactory	getStyleFactory,getRegion,getStyle
+javax/swing/text/LayoutQueue			setDefaultQueue	getDefaultQueue
+javax/swing/JDialog			setDefaultLookAndFeelDecorated	isDefaultLookAndFeelDecorated
+javax/swing/JFrame			setDefaultLookAndFeelDecorated	isDefaultLookAndFeelDecorated
+java/net/Authenticator			setDefault	null
