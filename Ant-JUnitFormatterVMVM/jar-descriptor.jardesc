@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="US-ASCII" standalone="no"?>
 <jardesc>
-    <jar path="VMVM/ant-formatter.jar"/>
+    <jar path="VMVM/ant-mvn-formatter.jar"/>
     <options buildIfNeeded="true" compress="false" descriptionLocation="/Ant-JUnitFormatterVMVM/jar-descriptor.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
