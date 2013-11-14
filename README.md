@@ -18,12 +18,14 @@ Example:
 ### Modifying your build scripts
 To automatically have VMVM be called by ant, modify the `junit` task of your `build.xml` file to add the following elements:
 
-`<classpath>
+```xml
+<classpath>
 <pathelement path="ant-mvn-formatter.jar" />
 <pathelement location="vmvm.jar"/>
 </classpath>
 <formatter classname="edu.columbia.cs.psl.vmvm.AntJUnitTestListener" extension=".xml"/>
-<jvmarg value="-Xbootclasspath/a:vmvm.jar:asm-all-4.1.jar"/>`
+<jvmarg value="-Xbootclasspath/a:vmvm.jar:asm-all-4.1.jar"/>
+```
 
 Make sure that the paths are correct to [vmvm.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/vmvm.jar) and [ant-mvn-formatter.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/ant-mvn-formatter.jar). Also be sure that your `junit` task has the argument `forkMode="once"` (e.g. that it won't fork a new process for each test, defating the purpose of VMVM).
 
@@ -33,27 +35,35 @@ To automatically have VMVM be called by mvn, modify the `pom.xml` file for your 
 
 1.	Make sure that you are using a recent version of the surefire plugin (e.g., 2.15)
 1.	Add the [vmvm.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/vmvm.jar) and [ant-mvn-formatter.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/ant-mvn-formatter.jar) to the surefire additional classpath (e.g. within the plugin configuration for surefire add):
-`<additionalClasspathElements>
-<additionalClasspathElement>../../vmvm.jar</additionalClasspathElement>
-<additionalClasspathElement>../../ant-mvn-formatter.jar</additionalClasspathElement>
-</additionalClasspathElements>`
-2.	Register the VMVM test listener with surefire. If you don't have any other properties set for the surefire plugin, then that would look like this:
-`<properties>
+
+```xml
+<additionalClasspathElements>
+<additionalClasspathElement>vmvm.jar</additionalClasspathElement>
+<additionalClasspathElement>ant-mvn-formatter.jar</additionalClasspathElement>
+</additionalClasspathElements>
+```
+
+3.	Register the VMVM test listener with surefire. If you don't have any other properties set for the surefire plugin, then that would look like this:
+
+```xml
+<properties>
 <property>
 <name>listener</name>
 <value>edu.columbia.cs.psl.vmvm.MvnVMVMListener</value>
 </property>
-</properties>`
+</properties>
+```
 
 Here's an example of a complete pom.xml block declaring the surefire plugin and registering VMVM with it:
-`<plugin>
+```xml
+<plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-surefire-plugin</artifactId>
 	<version>2.16</version>
 	<configuration>
 		<additionalClasspathElements>
-		<additionalClasspathElement>../../vmvm.jar</additionalClasspathElement>
-		<additionalClasspathElement>../../ant-mvn-formatter.jar</additionalClasspathElement>
+		<additionalClasspathElement>vmvm.jar</additionalClasspathElement>
+		<additionalClasspathElement>ant-mvn-formatter.jar</additionalClasspathElement>
 	</additionalClasspathElements>
 		<properties>
 		<property>
@@ -72,7 +82,8 @@ Here's an example of a complete pom.xml block declaring the surefire plugin and 
 		</configuration>
 		</execution>
 	</executions>
-</plugin>`
+</plugin>
+```
 
 In case of problems..
 -----
