@@ -5,7 +5,7 @@
 This repository contains the source and a [runnable binary](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/vmvm.jar) for **VMVM**.
 
 ###For more information
-Please refer to our [Technical Report](http://mice.cs.columbia.edu/getTechreport.php?techreportID=1549) or email [Jonathan Bell](mailto:jbell@cs.columbia.edu)
+Please refer to our [ICSE '14 Paper](http://jonbell.net/publications/vmvm) or email [Jonathan Bell](mailto:jbell@cs.columbia.edu)
 
 Running
 -----
@@ -86,6 +86,25 @@ Here's an example of a complete pom.xml block declaring the surefire plugin and 
 	</executions>
 </plugin>
 ```
+
+Citing
+-----
+If you would like to reference VMVM in an academic publication, please cite our ICSE '14 publication:
+```
+
+@inproceedings{vmvm,
+	Title = {Unit Test Virtualization with VMVM},
+	Author = {\textbf{Bell, Jonathan} and Kaiser, Gail},
+	Booktitle = {Proceedings of the 2014 International Conference on Software Engineering},
+	Location = {Hyderabad, India},
+	Month = {Jun},
+	Publisher = {IEEE Press},
+	Series = {ICSE 2014},
+	Url = {http://jonbell.net/publications/vmvm},
+	Year = {2014}
+}
+```
+
 
 In case of problems..
 -----
