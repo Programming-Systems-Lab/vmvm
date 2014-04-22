@@ -165,3 +165,5 @@ This project makes use of the following libraries:
 * [Log4j](http://logging.apache.org/log4j/), (c) 1999-2012, Apache Software Foundation, released under the Apache License 2.0
 
 The authors of this software are [Jonathan Bell](http://jonbell.net) and [Gail Kaiser](http://www.cs.columbia.edu/~kaiser/). The authors are members of the [Programming Systems Laboratory](http://www.psl.cs.columbia.edu/), funded in part by NSF CCF-1161079, NSF CNS-0905246, and NIH U54 CA121852.
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/cd95553682148d1cecb84c7edf60c780 "githalytics.com")](http://githalytics.com/Programming-Systems-Lab/vmvm)
