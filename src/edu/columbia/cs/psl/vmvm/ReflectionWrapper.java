@@ -28,7 +28,8 @@ public class ReflectionWrapper {
 		ArrayList<Field> ret = new ArrayList<>(r.length);
  		for(Field f : r)
 		{
-			if(!f.getName().startsWith("_vmvm") && !f.getName().endsWith("_vmvm_acc_logged") && !f.getName().endsWith("_vmvm_") && !f.getName().equals("vmvm_needs_reset"))
+			if(!f.getName().startsWith("_vmvm") && !f.getName().endsWith("_vmvm_acc_logged") && !f.getName().endsWith("_vmvm_") && !f.getName().equals("vmvm_needs_reset")
+					&& ! f.getName().equals("vmvm_reset_in_progress"))
 				ret.add(f);
 		}
  		r = new Field[ret.size()];
