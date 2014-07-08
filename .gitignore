@@ -2,3 +2,4 @@ framework/bin
 *.class
 *.log
 /bin
+experiments/
