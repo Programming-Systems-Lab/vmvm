@@ -69,7 +69,7 @@ import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
 
 public class Instrumenter {
 	public static URLClassLoader loader;
-	public static final boolean DEBUG=true;
+	public static final boolean DEBUG=false;
 	
 	public static HashSet<String> ignoredClasses = new HashSet<>();
 	static
@@ -105,6 +105,11 @@ public class Instrumenter {
 
 	private static File rootOutputDir;
 	private static String lastInstrumentedClass;
+	public static HashSet<String> finalClasses = new HashSet<String>();
+//	public static HashSet<String> anonClasses = new HashSet<String>();
+
+	public static HashSet<String> finalMethods = new HashSet<String>();
+	public static HashSet<String> finalFields = new HashSet<String>();
 
 	public static int MAX_SANDBOXES = 2;
 	public static HashMap<String, String> mutablizedFields = new HashMap<>();
@@ -124,6 +129,10 @@ public class Instrumenter {
 				ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
 				oos.writeObject(instrumentedClasses); //TODO reenable this
 				oos.writeObject(remappedInterfaces);
+//				oos.writeObject(anonClasses);
+				oos.writeObject(finalClasses);
+				oos.writeObject(finalMethods);
+				oos.writeObject(finalFields);
 				oos.close();
 			} catch (Exception ex) {
 				ex.printStackTrace();

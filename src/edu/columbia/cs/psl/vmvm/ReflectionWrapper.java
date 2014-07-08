@@ -7,6 +7,10 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import org.objectweb.asm.Type;
+
+import edu.columbia.cs.psl.vmvm.agent.VMVMClassFileTransformer;
+
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz)
 	{
@@ -70,9 +74,31 @@ public class ReflectionWrapper {
 			m.setAccessible(true);
 		return m.invoke(owner, args);
 	}
-
+	public static int getModifiers(Class<?> c)
+	{
+		VMVMClassFileTransformer.ensureInit();
+		int ret = c.getModifiers();
+		if(Instrumenter.finalClasses.contains(c.getName().replace(".", "/")))
+			ret = ret | Modifier.FINAL;
+		return ret;
+	}
+	public static int getModifiers(Method m)
+	{
+		VMVMClassFileTransformer.ensureInit();
+		int ret = m.getModifiers();
+		if(Instrumenter.finalMethods.contains(m.getDeclaringClass().getName().replace(".", "/") + "."+Type.getMethodDescriptor(m)))
+			ret = ret | Modifier.FINAL;
+		return ret;
+	}
+	public static int getModifiers(Field f)
+	{
+		VMVMClassFileTransformer.ensureInit();
+		int ret = f.getModifiers();
+		if(Instrumenter.finalFields.contains(f.getDeclaringClass().getName().replace(".", "/") + "."+Type.getDescriptor(f.getType())))
+			ret = ret | Modifier.FINAL;
+		return ret;
+	}
 	public static void tryToInit(Class<?> clazz) {
-
 		//			if(inited.contains(clazz))
 		//				return;
 		//			inited.add(clazz);

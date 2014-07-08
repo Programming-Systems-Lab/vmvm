@@ -70,6 +70,10 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 				interfaces[i] = Instrumenter.remapInterface(interfaces[i]);
 			}
 		}
+		if((access & Opcodes.ACC_FINAL) != 0 || (access & Opcodes.ACC_SUPER) != 0)
+		{
+			Instrumenter.finalClasses.add(name);
+		}
 		if((access & Opcodes.ACC_PUBLIC) == 0)
 		{
 			access = access & ~Opcodes.ACC_PROTECTED;
@@ -117,6 +121,8 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 //			if((access & Opcodes.ACC_PUBLIC) != 0) //pub
 			if((access & Opcodes.ACC_ENUM) != 0)
 			{
+				if((access & Opcodes.ACC_FINAL) != 0)
+					Instrumenter.finalFields.add(className+"."+name);
 				access = Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC;
 			}
 //			else if((access & Opcodes.ACC_PROTECTED) != 0) //pub
@@ -128,6 +134,7 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 		}
 		else if((access & Opcodes.ACC_STATIC) != 0 && value ==null) //static field on an interface - is final!!!
 		{
+			Instrumenter.finalFields.add(className+"."+name);
 			Instrumenter.mutablizedFields.put(this.className+"."+name,desc);
 			desc = Type.getDescriptor(MutableInstance.class);
 			value = null;

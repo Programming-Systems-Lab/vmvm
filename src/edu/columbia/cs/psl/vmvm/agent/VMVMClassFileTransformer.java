@@ -38,10 +38,14 @@ public class VMVMClassFileTransformer extends SecureClassLoader implements Class
 	static{
 		try
 		{
-			ClassNode cn = new ClassNode();
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream("vmvm-runtimecheat"));
+//			ClassNode cn = new ClassNode();
+			ObjectInputStream ois = new ObjectInputStream(VMVMClassFileTransformer.getSystemResourceAsStream("vmvm-runtimecheat"));
 			Instrumenter.instrumentedClasses = (HashMap<String, MethodListClassNode>) ois.readObject();
 			Instrumenter.remappedInterfaces = (HashSet<String>) ois.readObject();
+			Instrumenter.finalClasses = (HashSet<String>)ois.readObject();
+			Instrumenter.finalMethods= (HashSet<String>)ois.readObject();
+			Instrumenter.finalFields= (HashSet<String>)ois.readObject();
+
 //			if(Instrumenter.instrumentedClasses.containsKey("os$py"))
 //			{
 ////				Instrumenter.instrumentedClasses.remove("os$py");
@@ -179,5 +183,9 @@ public class VMVMClassFileTransformer extends SecureClassLoader implements Class
 	}
 	private Class<?> defineClass(String name, byte[] b, int off, int len, CodeSource codesource, boolean fake) {
 		return super.defineClass(name, b, off, len, codesource);
+	}
+	public static void ensureInit() {
+		// TODO Auto-generated method stub
+		
 	}
 }

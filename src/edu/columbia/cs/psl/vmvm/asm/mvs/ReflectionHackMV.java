@@ -69,7 +69,27 @@ public class ReflectionHackMV extends InstructionAdapter implements Opcodes {
 
             super.visitMethodInsn(opcode, owner, name, "(Ljava/lang/reflect/Method;"+desc.substring(1));
         }
+        else if((Type.getInternalName(Method.class).equals(owner) && name.equals("getModifiers")))        		
+        {
+        	owner = Type.getInternalName(ReflectionWrapper.class);
+        	opcode = INVOKESTATIC;
 
+            super.visitMethodInsn(opcode, owner, name, "(Ljava/lang/reflect/Method;"+desc.substring(1));
+        }
+        else if((Type.getInternalName(Class.class).equals(owner) && name.equals("getModifiers")))        		
+        {
+        	owner = Type.getInternalName(ReflectionWrapper.class);
+        	opcode = INVOKESTATIC;
+
+            super.visitMethodInsn(opcode, owner, name, "(Ljava/lang/Class;"+desc.substring(1));
+        }
+        else if((Type.getInternalName(Field.class).equals(owner) && name.equals("getModifiers")))        		
+        {
+        	owner = Type.getInternalName(ReflectionWrapper.class);
+        	opcode = INVOKESTATIC;
+
+            super.visitMethodInsn(opcode, owner, name, "(Ljava/lang/reflect/Field;"+desc.substring(1));
+        }
         else if((Type.getInternalName(Field.class).equals(owner) && (
         		name.equals("getBoolean") || 
         		name.equals("getByte") || 
