@@ -121,27 +121,30 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 					newName = name.replace("set", "is");
 				super.visitMethodInsn(opcode, owner, newName, Type.getMethodDescriptor(args[0]));
 				//Do the log
-				super.visitIntInsn(Opcodes.BIPUSH, clazz.setMethods.get(name));
 				//box if necessary
 				box(args[0]);
+				super.visitIntInsn(Opcodes.BIPUSH, clazz.setMethods.get(name));
+
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternal", "(Ljava/lang/Object;I)V");
 			}
 			else if(clazz.addMethods.containsKey(name))
 			{
 				super.visitInsn(Opcodes.DUP);
 				//Do the log
-				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
 				//box if necessary
 				box(args[0]);
+				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
+
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalAdd", "(Ljava/lang/Object;I)V");
 			}
 			else if(clazz.removeMethods.containsKey(name))
 			{
 				super.visitInsn(Opcodes.DUP);
 				//Do the log
-				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
 				//box if necessary
 				box(args[0]);
+				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
+
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalRemove", "(Ljava/lang/Object;I)V");
 			}
 		}

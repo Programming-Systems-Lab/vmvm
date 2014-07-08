@@ -9,6 +9,7 @@ import org.objectweb.asm.tree.FieldNode;
 
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
+import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
 import edu.columbia.cs.psl.vmvm.struct.MutableInstance;
 
 public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes {
@@ -23,6 +24,10 @@ public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes 
 	private boolean isFinalField(String owner, String name)
 	{
 		if(name.equals(Constants.VMVM_NEEDS_RESET))
+			return false;
+		if(name.equals(Constants.VMVM_RESET_IN_PROGRESS))
+			return false;
+		if(JUnitResettingClassVisitor.shouldIgnoreClass(owner))
 			return false;
 		if(Instrumenter.mutablizedFields.containsKey(owner + "." + name))
 			return true;

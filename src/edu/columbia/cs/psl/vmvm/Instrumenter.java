@@ -553,6 +553,7 @@ public class Instrumenter {
 
 	public static void main(String[] args) {
 		_main(args);
+		System.out.println("Completed VMVM instrumentation");
 	}
 
 	public static void _main(String[] args) {

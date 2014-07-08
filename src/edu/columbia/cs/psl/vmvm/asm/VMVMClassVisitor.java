@@ -175,6 +175,10 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 //	}
 	protected void generateClinit(boolean callClinit)
 	{
+		if(className.contains("ClassImposterizer"))
+		{
+			System.err.println(className + " in CLINIT REGEN" + (callClinit ? " T" : " F") + " " + (isClass ? " T" : " F"));
+		}
 		MethodVisitor mv = super.visitMethod( Opcodes.ACC_STATIC, "<clinit>", "()V", null,null);
 		GeneratorAdapter gmv = new GeneratorAdapter(mv,  Opcodes.ACC_STATIC, "<clinit>", "()V");
 		StaticFinalMutibleizer fmv = new StaticFinalMutibleizer(gmv,  Opcodes.ACC_STATIC, className, "<clinit>", "()V");
@@ -198,7 +202,7 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 		String classWithResetMethod = className;
 		if(!isAClass())
 			classWithResetMethod += "$vmvmReseter";
-		if(callClinit)
+//		if(callClinit)
 		{
 //			if(StaticFieldIsolatorMV.CLINIT_ORDER_DEBUG)
 //			{
@@ -227,9 +231,11 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 		{
 			mv = super.visitMethod( Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD, "()V", null,null);
 			gmv = new GeneratorAdapter(mv,  Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD, "()V");
-			gmv.returnValue();
+			StaticFieldIsolatorMV gmvv = new StaticFieldIsolatorMV(gmv, Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD, "()V", this, null);
+			gmvv.visitCode();
+			gmvv.visitInsn(RETURN);
 			gmv.visitMaxs(0, 0);
-			gmv.visitEnd();
+			gmvv.visitEnd();
 
 		}
 

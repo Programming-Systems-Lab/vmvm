@@ -47,7 +47,8 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
 		if (this.name.equals("<clinit>") || this.name.equals(Constants.VMVM_STATIC_RESET_METHOD)) {
 			super.visitCode();
-
+			if(cv.getClassName().endsWith("CallbackInfo") || cv.getClassName().endsWith("CodeGenerationException") || cv.getClassName().endsWith("CodeEmitter"))
+				printStackTrace();
 //			super.visitTryCatchBlock(l0, l1, l2, "java/lang/Exception");
 //			super.visitLabel(l0);
 			/*
@@ -58,13 +59,17 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			{
 			String superz = Instrumenter.getClassNode(cv.getClassName()).superName;
 			if (!superz.equals("java/lang/Object")) {
+				
 				MethodListClassNode superN = Instrumenter.instrumentedClasses.get(superz);
+				if(cv.getClassName().contains("ClassImposterizer"))
+				System.err.println(superN.name + " " + (superN.hasClinit ? "T" : "F"));
 				if (superN != null && superN.hasClinit) {
-					Label continu = new Label();
-					super.visitFieldInsn(GETSTATIC, superz, Constants.VMVM_NEEDS_RESET, "Z");
-					super.visitJumpInsn(IFEQ, continu);
-					super.visitMethodInsn(INVOKESTATIC, superz, Constants.VMVM_STATIC_RESET_METHOD, "()V");
-					super.visitLabel(continu);
+					checkAndReinit(superz);
+//					Label continu = new Label();
+//					super.visitFieldInsn(GETSTATIC, superz, Constants.VMVM_NEEDS_RESET, "Z");
+//					super.visitJumpInsn(IFEQ, continu);
+//					super.visitMethodInsn(INVOKESTATIC, superz, Constants.VMVM_STATIC_RESET_METHOD, "()V");
+//					super.visitLabel(continu);
 
 				}
 			}
@@ -84,15 +89,8 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V");
 
 			if (CLINIT_ORDER_DEBUG) {
-				super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-				super.visitLdcInsn("clinit  rerunning>" + cv.getClassName());
-				super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-				if (cv.getClassName().endsWith("ivy/Ivy") || cv.getClassName().endsWith("ivy/util/FileUtil")) {
-					super.visitTypeInsn(NEW, "java/lang/Exception");
-					super.visitInsn(DUP);
-					super.visitMethodInsn(INVOKESPECIAL, "java/lang/Exception", "<init>", "()V");
-					super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
-				}
+				println("clinit  rerunning>" + cv.getClassName());
+
 			}
 
 			String className = cv.getClassName();
@@ -181,6 +179,26 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		}
 		super.visitTypeInsn(opcode, type);
 	}
+	public void printStackTrace()
+	{
+		super.visitTypeInsn(NEW, "java/lang/Exception");
+		    super.visitInsn(DUP);
+		    super.visitMethodInsn(INVOKESPECIAL, "java/lang/Exception", "<init>", "()V");
+		    super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
+	}
+	public void println(String toPrint) {
+        super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        super.visitLdcInsn(toPrint + " : ");
+        super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print",
+                "(Ljava/lang/String;)V");
+
+        super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread",
+                "()Ljava/lang/Thread;");
+        super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getName", "()Ljava/lang/String;");
+        super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println",
+                "(Ljava/lang/String;)V");
+    }
 
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
@@ -198,28 +216,29 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 	}
 
 	public void checkAndReinit(String clazz) {
-		if (clazz.equals(cv.getClassName()) && isStaticMethod) //no need to check to init if we are already executing code in this class!
+		if (clazz.equals(cv.getClassName()))// && isStaticMethod) //no need to check to init if we are already executing code in this class!
 			return;
 		if (this.thisMN != null && this.thisMN.ignoredInitCalls != null && this.thisMN.ignoredInitCalls.contains(counter.getCount())) {
 //			System.out.println("Ignoring reinit of " + clazz + " in " + this.cv.getClassName() + "." + this.name + " (prev in this method) at " + counter.getCount());
 			return;
 		}
-		if (this.thisMN != null && this.thisMN.typesToIgnoreInit != null && this.thisMN.typesToIgnoreInit.contains(clazz)) {
-//			System.out.println("Ignoring reinit of " + clazz + " in " + this.cv.getClassName() + "." + this.name + "(from prev methods in CG) at " + counter.getCount());
-//			return;
-		}
+//		if (this.thisMN != null && this.thisMN.typesToIgnoreInit != null && this.thisMN.typesToIgnoreInit.contains(clazz)) {
+////			System.out.println("Ignoring reinit of " + clazz + " in " + this.cv.getClassName() + "." + this.name + "(from prev methods in CG) at " + counter.getCount());
+////			return;
+//		}
+		
 		if(JUnitResettingClassVisitor.shouldIgnoreClass(clazz))
 			return;
 		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); //Need to force to make sure that this is initialized before we can get a lock on it.
 		super.visitInsn(POP);
 		
 		Label continu = new Label();
-			if(CLINIT_ORDER_DEBUG)
-			{
-				super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-				super.visitLdcInsn("clinit going to check "+clazz+" > in " + cv.getClassName());
-			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-			}		
+//			if(CLINIT_ORDER_DEBUG)
+//			{
+//				super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
+//				super.visitLdcInsn("clinit going to check "+clazz+" > in " + cv.getClassName());
+//			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+//			}		
 		if (cv.getVersion() > 48 && cv.getVersion() < 1000)// java 5+
 			super.visitLdcInsn(Type.getType("L" + clazz + ";"));
 		else {
@@ -230,29 +249,68 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;");
 			super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 		}
-		if(CLINIT_ORDER_DEBUG)
-		{
-			super.visitInsn(DUP);
-			super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(Class.class), "toString", "()Ljava/lang/String;");
-			super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-			super.visitInsn(SWAP);
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
-		}		
+
 		super.visitInsn(DUP);
 		super.monitorenter();
-		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); //must be on a class, not an interface b/c final bs
-		super.visitJumpInsn(IFEQ, continu);
+		
+		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
+		Label notInInit = new Label();
+		super.visitJumpInsn(IFNULL, notInInit);
+		
+		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
+		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+		super.visitJumpInsn(IF_ACMPEQ, continu);
+		//If the Class object for C indicates that initialization is in progress for C by some other thread, then release LC and block the current thread until informed that the in-progress initialization has completed, at which time repeat this procedure.
+		//If the Class object for C indicates that initialization is in progress for C by the current thread, then this must be a recursive request for initialization. Release LC and complete normally
+		super.visitInsn(DUP);
+		if(CLINIT_ORDER_DEBUG)
+		{
+			println("clinit going to wait on "+clazz+" > in " + cv.getClassName());
+		}
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "wait", "()V");
+		if(CLINIT_ORDER_DEBUG)
+		{
+			println("clinit done waiting on "+clazz+" > in " + cv.getClassName());
+		}
+		super.visitLabel(notInInit);
+		
+		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z");
+		super.visitJumpInsn(IFEQ, continu); 		//If the Class object for C indicates that C has already been initialized, then no further action is required. Release LC and complete normally.
+		//Otherwise, record the fact that initialization of the Class object for C is in progress by the current thread, and release LC. Then, initialize each final static field of C with the constant value in its ConstantValue attribute (§4.7.2), in the order the fields appear in the ClassFile structure
 		super.visitInsn(ICONST_0);
-		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); //must be on a class, not an interface b/c final bs
+		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); 
+		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
+		super.visitInsn(DUP);
 		super.monitorexit();
-		Label end = new Label();
+		if(CLINIT_ORDER_DEBUG)
+			println("Rerunning " + clazz +" from " + cv.getClassName());
+		if(clazz.endsWith("Enhancer"))
+			printStackTrace();
 		super.visitMethodInsn(INVOKESTATIC, clazz, Constants.VMVM_STATIC_RESET_METHOD, "()V");
-		super.visitJumpInsn(GOTO, end);
+		//If the execution of the class or interface initialization method completes normally, then acquire LC, label the Class object for C as fully initialized, notify all waiting threads, release LC, and complete this procedure normally.
+		super.visitInsn(DUP);
+		super.monitorenter();
+		super.visitInsn(ACONST_NULL);
+		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
+		super.visitInsn(DUP);
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "notifyAll", "()V");
+		if(CLINIT_ORDER_DEBUG)
+		{
+			println("clinit notified waiters on "+clazz+" > in " + cv.getClassName());
+		}
+
 		super.visitLabel(continu);
 		super.monitorexit();
-		super.visitLabel(end);
 	}
-
+	void magic() throws InterruptedException
+	{
+		synchronized(l0)
+		{
+			l0.wait();
+//			l0.notifyAll();
+		}
+	}
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 		MethodListClassNode cn = Instrumenter.getClassNodeWithField(owner, name);
@@ -288,9 +346,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 	@Override
 	public void visitInsn(int opcode) {
 		if (CLINIT_ORDER_DEBUG && opcode == Opcodes.RETURN && this.name.equals(Constants.VMVM_STATIC_RESET_METHOD) && this.cv.isAClass()) {
-			super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
-			super.visitLdcInsn("clinit finished rerunning>" + cv.getClassName());
-			super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+	println("clinit finished rerunning>" + cv.getClassName());
 		}
 		//		if (opcode == Opcodes.RETURN && this.name.equals("<clinit>") && this.cv.isAClass()) {
 		//			for (EqFieldInsnNode fin : Instrumenter.getFieldsEffectedBy(cv.getClassName(), "<clinit>", "()V")) {
