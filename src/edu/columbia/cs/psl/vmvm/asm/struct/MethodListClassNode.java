@@ -21,6 +21,8 @@ public class MethodListClassNode extends ClassNode implements Serializable {
 	private static final long serialVersionUID = 8364049116079289872L;
 	public transient InsnList clInitInsns;
 	public boolean hasClinit;
+	public boolean hasClinitOrSuperHasClinit;
+	public boolean superClinitExplored;
 	
 	public boolean clInitCalculatedNecessary;
 	public HashSet<EqMethodNode> methodsHashSet = new HashSet<>();
