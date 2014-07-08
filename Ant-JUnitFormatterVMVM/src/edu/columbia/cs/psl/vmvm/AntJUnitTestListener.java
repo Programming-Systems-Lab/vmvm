@@ -16,8 +16,7 @@ public class AntJUnitTestListener implements JUnitResultFormatter{
 
 	@Override
 	public void endTestSuite(JUnitTest arg0) throws BuildException {
-		// TODO Auto-generated method stub
-		
+		VirtualRuntime.resetStatics();		
 	}
 
 	@Override
@@ -40,7 +39,6 @@ public class AntJUnitTestListener implements JUnitResultFormatter{
 
 	@Override
 	public void startTestSuite(JUnitTest arg0) throws BuildException {
-		VirtualRuntime.resetStatics();
 	}
 
 	@Override

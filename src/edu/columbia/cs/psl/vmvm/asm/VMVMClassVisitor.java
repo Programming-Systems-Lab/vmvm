@@ -217,7 +217,11 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 //				mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
 //				gmv.visitLabel(l3);
 //			}
+			gmv.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+			gmv.visitFieldInsn(PUTSTATIC, classWithResetMethod, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 			gmv.visitMethodInsn(INVOKESTATIC, classWithResetMethod, Constants.VMVM_STATIC_RESET_METHOD, "()V");			
+			gmv.visitInsn(ACONST_NULL);
+			gmv.visitFieldInsn(PUTSTATIC, classWithResetMethod, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		}
 		gmv.returnValue();
 		gmv.visitMaxs(0, 0);

@@ -118,11 +118,14 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 //		access = access & ~Opcodes.ACC_FINAL;
 		if ((access & Opcodes.ACC_STATIC) != 0 && isAClass) //Static field
 		{
+			if((access & Opcodes.ACC_FINAL) != 0)
+			{
+				access = access & ~Opcodes.ACC_FINAL;
+				Instrumenter.finalFields.add(className+"."+name);
+			}
 //			if((access & Opcodes.ACC_PUBLIC) != 0) //pub
 			if((access & Opcodes.ACC_ENUM) != 0)
 			{
-				if((access & Opcodes.ACC_FINAL) != 0)
-					Instrumenter.finalFields.add(className+"."+name);
 				access = Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC;
 			}
 //			else if((access & Opcodes.ACC_PROTECTED) != 0) //pub

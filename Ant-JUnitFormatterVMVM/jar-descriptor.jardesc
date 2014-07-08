@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="US-ASCII" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <jardesc>
     <jar path="VMVM/ant-mvn-formatter.jar"/>
     <options buildIfNeeded="true" compress="false" descriptionLocation="/Ant-JUnitFormatterVMVM/jar-descriptor.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
@@ -12,8 +12,8 @@
     </manifest>
     <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
         <file path="/Ant-JUnitFormatterVMVM/.project"/>
+        <javaElement handleIdentifier="=Ant-JUnitFormatterVMVM/src"/>
         <file path="/Ant-JUnitFormatterVMVM/jar-descriptor.jardesc"/>
         <file path="/Ant-JUnitFormatterVMVM/.classpath"/>
-        <javaElement handleIdentifier="=Ant-JUnitFormatterVMVM/src"/>
     </selectedElements>
 </jardesc>
