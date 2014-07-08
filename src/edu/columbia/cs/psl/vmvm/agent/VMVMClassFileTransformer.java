@@ -25,6 +25,7 @@ import org.objectweb.asm.tree.FieldNode;
 
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
+import edu.columbia.cs.psl.vmvm.Instrumenter.InstrumentResult;
 import edu.columbia.cs.psl.vmvm.VMVMInstrumented;
 import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
@@ -60,52 +61,52 @@ public class VMVMClassFileTransformer extends SecureClassLoader implements Class
 	}
 	private static byte[] handleTransform(byte[] classfileBuffer)
 	{
-//		if(NO_RUNTIME_INST)
+		if(NO_RUNTIME_INST)
 		return classfileBuffer;
-//		
-//		if(classfileBuffer == null)
-//			return null;
-//		
-//		ClassReader cr = new ClassReader(classfileBuffer);
-//		ClassNode cn = new ClassNode();
-//		cr.accept(cn, 0);
-//		
-//		if(JUnitResettingClassVisitor.shouldIgnoreClass(cn.name) || (cn.access & Opcodes.ACC_ANNOTATION) != 0)
-//		{
-////			System.out.println("Ignoring " + cn.name);
-//			return classfileBuffer;
-//		}
-//		
-//		if(cn.fields != null)
-//			for(Object o : cn.fields)
-//			{
-//				FieldNode an = (FieldNode) o;
-//				if(an.name.equals(Constants.VMVM_NEEDS_RESET))
-//				{
-//					return classfileBuffer;
-//				}
-//			}
-////		if(Instrumenter.instrumentedClasses.containsKey(cn.name))
+		
+		if(classfileBuffer == null)
+			return null;
+		
+		ClassReader cr = new ClassReader(classfileBuffer);
+		ClassNode cn = new ClassNode();
+		cr.accept(cn, 0);
+		
+		if(JUnitResettingClassVisitor.shouldIgnoreClass(cn.name) || (cn.access & Opcodes.ACC_ANNOTATION) != 0)
+		{
+//			System.out.println("Ignoring " + cn.name);
+			return classfileBuffer;
+		}
+		
+		if(cn.fields != null)
+			for(Object o : cn.fields)
+			{
+				FieldNode an = (FieldNode) o;
+				if(an.name.equals(Constants.VMVM_NEEDS_RESET))
+				{
+					return classfileBuffer;
+				}
+			}
+//		if(Instrumenter.instrumentedClasses.containsKey(cn.name))
 //			System.out.println("Runtime inst: " + cn.name);
-//
-//		Instrumenter.analyzeClass(new ClassReader(classfileBuffer), Instrumenter.instrumentedClasses);
-//		LinkedList<byte[]> out = Instrumenter.instrumentClass(new ByteArrayInputStream(classfileBuffer),false);
-//		try{
-//			File debugFolder =new File("debug");
-//			debugFolder.mkdir();
-//			FileOutputStream fos = new FileOutputStream("debug/"+cn.name.replace("/", ".")+".class");
-//			fos.write(out.getFirst());
-//			fos.close();
-//		}
-//		catch(Exception ex)
-//		{
-//			ex.printStackTrace();
-//		}
-//		if(out == null)
-//		{
-//			return null;
-//		}
-//		return out.getFirst(); //Don't support lazy interface duplication here
+
+		Instrumenter.analyzeClass(cn.name,new ClassReader(classfileBuffer), Instrumenter.instrumentedClasses);
+		InstrumentResult out = Instrumenter.instrumentClass(cn.name,new ByteArrayInputStream(classfileBuffer),false);
+		try{
+			File debugFolder =new File("debug");
+			debugFolder.mkdir();
+			FileOutputStream fos = new FileOutputStream("debug/"+cn.name.replace("/", ".")+".class");
+			fos.write(out.clazz);
+			fos.close();
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		if(out == null)
+		{
+			return null;
+		}
+		return out.clazz; //Don't support lazy interface duplication here
 	}
 	public VMVMClassFileTransformer()
 	{

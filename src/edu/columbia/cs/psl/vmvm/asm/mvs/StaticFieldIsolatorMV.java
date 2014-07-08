@@ -47,8 +47,8 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
 		if (this.name.equals("<clinit>") || this.name.equals(Constants.VMVM_STATIC_RESET_METHOD)) {
 			super.visitCode();
-			if(cv.getClassName().endsWith("CallbackInfo") || cv.getClassName().endsWith("CodeGenerationException") || cv.getClassName().endsWith("CodeEmitter"))
-				printStackTrace();
+//			if(cv.getClassName().endsWith("CallbackInfo") || cv.getClassName().endsWith("CodeGenerationException") || cv.getClassName().endsWith("CodeEmitter"))
+//				printStackTrace();
 //			super.visitTryCatchBlock(l0, l1, l2, "java/lang/Exception");
 //			super.visitLabel(l0);
 			/*
@@ -61,8 +61,8 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			if (!superz.equals("java/lang/Object")) {
 				
 				MethodListClassNode superN = Instrumenter.instrumentedClasses.get(superz);
-				if(cv.getClassName().contains("ClassImposterizer"))
-				System.err.println(superN.name + " " + (superN.hasClinit ? "T" : "F"));
+//				if(cv.getClassName().contains("ClassImposterizer"))
+//				System.err.println(superN.name + " " + (superN.hasClinit ? "T" : "F"));
 				if (superN != null && superN.hasClinit) {
 					checkAndReinit(superz);
 //					Label continu = new Label();

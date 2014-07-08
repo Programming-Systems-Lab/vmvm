@@ -69,6 +69,7 @@ import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
 
 public class Instrumenter {
 	public static URLClassLoader loader;
+	public static final boolean DEBUG=true;
 	
 	public static HashSet<String> ignoredClasses = new HashSet<>();
 	static
@@ -249,8 +250,8 @@ public class Instrumenter {
 					break;
 				case AbstractInsnNode.METHOD_INSN:
 					MethodInsnNode min = (MethodInsnNode) cn.clInitInsns.get(i);
-					if(cn.name.endsWith("util/StringUtils"))
-						System.err.println(min.owner + ", " + min.name);
+//					if(cn.name.endsWith("util/StringUtils"))
+//						System.err.println(min.owner + ", " + min.name);
 					if(!min.name.startsWith("$VRi") && !(min.name.equals("<init>") && !min.owner.equals(cn.name))&& 
 							!min.name.equals("getLogger") && !min.owner.equals("java/lang/String") &&
 							!(min.owner.equals("java/util/Arrays") && min.name.equals("fill")))
@@ -444,10 +445,6 @@ public class Instrumenter {
 	}
 	
 	public static MethodNode getMethodNode(ClassNode thisClassInfo, String name2, String desc2) {
-		if(name2.contains("foo"))
-		{
-			System.out.println(name2+desc2);
-		}
 		for (Object o : thisClassInfo.methods) {
 			MethodNode mn = (MethodNode) o;
 			if (mn.name.equals(name2) && mn.desc.equals(desc2))
@@ -494,11 +491,11 @@ public class Instrumenter {
 	private static String curPath = null;
 
 
-	static class InstrumentResult
+	public static class InstrumentResult
 	{
-		byte[] clazz;
-		byte[] intfc;
-		byte[] intfcReseter;
+		public byte[] clazz;
+		public byte[] intfc;
+		public byte[] intfcReseter;
 	}
 	public static InstrumentResult instrumentClass(String path, InputStream is, boolean renameInterfaces) {
 		try {
@@ -540,6 +537,16 @@ public class Instrumenter {
 			} catch (Exception ex) {
 				System.out.println(lastInstrumentedClass);
 				ex.printStackTrace();
+			}
+			
+			if (DEBUG) {
+				File debugDir = new File("debug");
+				if (!debugDir.exists())
+					debugDir.mkdir();
+				File f = new File("debug/" + cn.name.replace("/", ".") + ".class");
+				FileOutputStream fos = new FileOutputStream(f);
+				fos.write(cw.toByteArray());
+				fos.close();
 			}
 			curPath = null;
 			return out;
@@ -1013,7 +1020,7 @@ public class Instrumenter {
 		for (File fi : f.listFiles()) {
 			if (fi.isDirectory())
 				processDirectory(fi, thisOutputDir, false);
-			else if (fi.getName().endsWith(".class"))
+			else if (fi.getName().endsWith(".class") && !fi.getName().endsWith("package-info.class"))
 				try {
 					processClass(fi.getName(), new FileInputStream(fi), thisOutputDir);
 				} catch (FileNotFoundException e) {
@@ -1286,7 +1293,7 @@ public class Instrumenter {
 				JarEntry e = entries.nextElement();
 				switch (pass_number) {
 				case PASS_ANALYZE:
-					if (e.getName().endsWith(".class")) {
+					if (e.getName().endsWith(".class") && ! e.getName().endsWith("looks.like.a.class")) {
 						classesInstrumented++;
 						if(MAX_CLASSES > 0 && classesInstrumented >= MAX_CLASSES)
 							return;
@@ -1294,7 +1301,7 @@ public class Instrumenter {
 					}
 					break;
 				case PASS_OUTPUT:
-					if (e.getName().endsWith(".class") && !e.getName().startsWith("org/xml/sax")) {
+					if (e.getName().endsWith(".class") && !e.getName().startsWith("org/xml/sax") && ! e.getName().endsWith("package-info.class") && ! e.getName().endsWith("looks.like.a.class")) {
 						{
 							try{
 							JarEntry outEntry = new JarEntry(e.getName());
@@ -1393,6 +1400,7 @@ public class Instrumenter {
 
 			try {
 				source = new FileInputStream(f).getChannel();
+				dest.getParentFile().mkdirs();
 				destination = new FileOutputStream(dest).getChannel();
 				destination.transferFrom(source, 0, source.size());
 			} catch (Exception ex) {

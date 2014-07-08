@@ -175,10 +175,6 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 //	}
 	protected void generateClinit(boolean callClinit)
 	{
-		if(className.contains("ClassImposterizer"))
-		{
-			System.err.println(className + " in CLINIT REGEN" + (callClinit ? " T" : " F") + " " + (isClass ? " T" : " F"));
-		}
 		MethodVisitor mv = super.visitMethod( Opcodes.ACC_STATIC, "<clinit>", "()V", null,null);
 		GeneratorAdapter gmv = new GeneratorAdapter(mv,  Opcodes.ACC_STATIC, "<clinit>", "()V");
 		StaticFinalMutibleizer fmv = new StaticFinalMutibleizer(gmv,  Opcodes.ACC_STATIC, className, "<clinit>", "()V");
