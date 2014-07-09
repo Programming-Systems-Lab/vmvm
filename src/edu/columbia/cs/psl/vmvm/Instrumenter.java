@@ -121,8 +121,10 @@ public class Instrumenter {
 			calculatedWhatsClinitedPerMethod();
 			break;
 		case PASS_OUTPUT:
+			File genDir = new File(rootOutputDir,"gen");
+			genDir.mkdirs();
 			//Write out all of the info on classes that we have already instrumented
-			File f = new File("vmvm-runtimecheat");
+			File f = new File(genDir,"vmvm-runtimecheat");
 			if (f.exists())
 				f.delete();
 			try {
