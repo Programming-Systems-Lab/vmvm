@@ -53,9 +53,9 @@ public class VMVMClassFileTransformer extends SecureClassLoader implements Class
 //			}
 			ois.close();
 		}
-		catch(Exception ex)
+		catch(Throwable ex)
 		{
-			ex.printStackTrace();
+//			ex.printStackTrace();
 		}
 	}
 	@Override

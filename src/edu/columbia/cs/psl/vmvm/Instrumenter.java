@@ -40,6 +40,7 @@ import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.IntializedTypeAnalyzer;
 import edu.columbia.cs.psl.vmvm.asm.IntializedTypeAnalyzer.Node;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
+import edu.columbia.cs.psl.vmvm.asm.MethodVisitorFactory;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFieldIsolatorMV;
 import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFinalMutibleizer;
@@ -70,6 +71,30 @@ public class Instrumenter {
 	public static URLClassLoader loader;
 	public static final boolean DEBUG=false;
 	
+	public static MethodVisitorFactory methodVisitorFactory;
+	static
+	{
+		try{
+			//Load properties file
+			Scanner s = new Scanner(Instrumenter.class.getResourceAsStream("vmvm.properties"));
+			while(s.hasNextLine())
+			{
+				String[] d = s.nextLine().split("=");
+				if(d[0].equals("methodVisitorFactory"))
+				{
+					methodVisitorFactory = (MethodVisitorFactory) Class.forName(d[1]).newInstance();
+				}
+				else
+					System.err.println("Warn: ignoring option "+d[0]+"="+d[1]);
+			}
+			s.close();
+		}
+		catch(Throwable t)
+		{
+			//nop
+			t.printStackTrace();
+		}
+	}
 	public static HashSet<String> ignoredClasses = new HashSet<>();
 	static
 	{

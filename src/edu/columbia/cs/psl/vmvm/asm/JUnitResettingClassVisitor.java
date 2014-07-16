@@ -176,7 +176,12 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 			}
 			MethodVisitor fmv = cv.visitMethod(acc, name, desc, signature, exceptions);
 			fmv = new JSRInlinerAdapter(fmv, acc, name, desc, signature, exceptions);
-
+			MethodVisitorFactory addOn = null;
+			if(Instrumenter.methodVisitorFactory != null)
+			{
+				addOn = Instrumenter.methodVisitorFactory.newInstance();
+				fmv = addOn.getMethodVisitor(fmv,acc, name, desc, signature, exceptions);
+			}
 			ClassDefineInterceptMethodVisitor dynMV = new ClassDefineInterceptMethodVisitor(fmv, className, name, desc);
 //			UnconditionalChrootMethodVisitor chrooter = new UnconditionalChrootMethodVisitor(Opcodes.ASM4, dynMV, acc, name, desc, className , this);
 			SystemPropertyLogger propLogger = new SystemPropertyLogger(Opcodes.ASM5,dynMV,acc,name,desc);
@@ -192,6 +197,8 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 			TypeRememberingLocalVariableSorter lvs2 = new TypeRememberingLocalVariableSorter(acc, desc, jumv);
 			staticMV.setLvs(lvs2);
 			dynMV.setLocalVariableSorter(lvs2);
+			if(addOn != null)
+				addOn.addLocalVaribleSorter(lvs2);
 			InsnCountingMV counter = new InsnCountingMV(Opcodes.ASM5, lvs2);
 			staticMV.setCounter(counter);
 			return counter;
