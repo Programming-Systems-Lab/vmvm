@@ -92,7 +92,6 @@ public class Instrumenter {
 		catch(Throwable t)
 		{
 			//nop
-			t.printStackTrace();
 		}
 	}
 	public static HashSet<String> ignoredClasses = new HashSet<>();
