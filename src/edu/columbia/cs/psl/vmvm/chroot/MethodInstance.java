@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.Method;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.Method;
 
 /**
  * @author miriammelnick A class to contain metadata about a method. Includes an

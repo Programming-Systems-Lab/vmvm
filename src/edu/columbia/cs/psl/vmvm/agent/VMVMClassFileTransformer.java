@@ -16,13 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.Instrumenter.InstrumentResult;
@@ -30,6 +23,12 @@ import edu.columbia.cs.psl.vmvm.VMVMInstrumented;
 import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassReader;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AnnotationNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
 
 @SuppressWarnings("unchecked")
 public class VMVMClassFileTransformer extends SecureClassLoader implements ClassFileTransformer, Opcodes{

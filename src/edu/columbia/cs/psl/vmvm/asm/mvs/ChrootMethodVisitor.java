@@ -4,14 +4,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.tree.MethodInsnNode;
-
 import com.sun.org.apache.bcel.internal.generic.INVOKESPECIAL;
 
 import edu.columbia.cs.psl.vmvm.Instrumenter;
@@ -19,6 +11,13 @@ import edu.columbia.cs.psl.vmvm.VMState;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodInsnNode;
 import edu.columbia.cs.psl.vmvm.chroot.ChrootUtils;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.AdviceAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
 
 public class ChrootMethodVisitor extends InstructionAdapter {
 	public static HashMap<String, String> fsMethods = new HashMap<>();
@@ -38,19 +37,19 @@ public class ChrootMethodVisitor extends InstructionAdapter {
 	private VMVMClassVisitor icv;
 	private InvivoAdapter invivoAdapter;
 	public ChrootMethodVisitor(int api, MethodVisitor mv, int access, String name, String desc, String className, InvivoAdapter invivoAdapter, VMVMClassVisitor icv) {
-		super(mv);
+		super(Opcodes.ASM5,mv);
 		this.className = className;
 		this.icv = icv;
 		this.invivoAdapter = invivoAdapter;
 	}
 
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		if (fsMethods.containsKey(owner + "." + name + desc) && opcode != Opcodes.INVOKESPECIAL) {
 //			System.out.println("Chroot over " + owner + " " + name + " " + desc);
 			Label sandboxed = new Label();
 			Label end = new Label();
-			EqMethodInsnNode mi = new EqMethodInsnNode(opcode, owner, name, desc);
+			EqMethodInsnNode mi = new EqMethodInsnNode(opcode, owner, name, desc, itfc);
 			Type[] args = Type.getArgumentTypes(desc);
 			
 			if (opcode != Opcodes.INVOKESTATIC && !name.equals("<init>")) {
@@ -71,13 +70,13 @@ public class ChrootMethodVisitor extends InstructionAdapter {
 			
 			invivoAdapter.branchIfSandboxed(sandboxed);
 			
-			super.visitMethodInsn(mi.getOpcode(), mi.owner, mi.name, mi.desc);
+			super.visitMethodInsn(mi.getOpcode(), mi.owner, mi.name, mi.desc, itfc);
 			super.visitJumpInsn(Opcodes.GOTO, end);
 			
 			super.visitLabel(sandboxed);
 			invivoAdapter.getSandboxFlagState();
 			
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, className,ChrootUtils.getCaptureMethodName(mi), desc);
+			super.visitMethodInsn(Opcodes.INVOKESTATIC, className,ChrootUtils.getCaptureMethodName(mi), desc, itfc);
 //			mi.desc= desc;
 			icv.addChrootMethodToGen(mi);
 
@@ -91,6 +90,6 @@ public class ChrootMethodVisitor extends InstructionAdapter {
 			super.visitLabel(end);
 			
 		} else
-			super.visitMethodInsn(opcode, owner, name, desc);
+			super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 }

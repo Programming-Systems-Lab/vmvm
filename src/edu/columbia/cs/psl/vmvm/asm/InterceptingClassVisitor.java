@@ -5,22 +5,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.JSRInlinerAdapter;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VMState;
@@ -35,6 +19,21 @@ import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFieldIsolatorMV;
 import edu.columbia.cs.psl.vmvm.asm.mvs.TypeRememberingLocalVariableSorter;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.chroot.ChrootUtils;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.AnnotationVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.FieldVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.JSRInlinerAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AnnotationNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
 
 public class InterceptingClassVisitor extends VMVMClassVisitor {
 
@@ -49,7 +48,7 @@ public class InterceptingClassVisitor extends VMVMClassVisitor {
 	private boolean generateVMVMInterface = false;
 
 	public InterceptingClassVisitor(ClassVisitor cv, ClassNode thisClassInfo, boolean generateVMVMInterface) {
-		super(Opcodes.ASM4, cv,true);
+		super(Opcodes.ASM5, cv,true);
 		this.thisClassInfo = thisClassInfo;
 		this.generateVMVMInterface = generateVMVMInterface;
 		if (generateVMVMInterface && (thisClassInfo.access & Opcodes.ACC_INTERFACE) != 0) {
@@ -199,11 +198,11 @@ public class InterceptingClassVisitor extends VMVMClassVisitor {
 			MethodVisitor fmv = cv.visitMethod(acc, name, desc, signature, exceptions);
 			JSRInlinerAdapter mv = new JSRInlinerAdapter(fmv, acc, name, desc, signature, exceptions);
 			ClassDefineInterceptMethodVisitor dynMV = new ClassDefineInterceptMethodVisitor(mv, className, name, desc);
-			InvivoAdapter invivoAdapter = new InvivoAdapter(Opcodes.ASM4, dynMV, acc, name, desc, className, generateReverseStub);
-			SandboxPropogatingMV sandboxer = new SandboxPropogatingMV(Opcodes.ASM4, invivoAdapter, acc, name, desc, className, invivoAdapter, this, newM);
+			InvivoAdapter invivoAdapter = new InvivoAdapter(Opcodes.ASM5, dynMV, acc, name, desc, className, generateReverseStub);
+			SandboxPropogatingMV sandboxer = new SandboxPropogatingMV(Opcodes.ASM5, invivoAdapter, acc, name, desc, className, invivoAdapter, this, newM);
 			StaticFieldIsolatorMV staticIsolator = new StaticFieldIsolatorMV(sandboxer, acc, name, desc, this,Instrumenter.getMethodNode(this.className, name, desc));
-			ChrootMethodVisitor chrooter = new ChrootMethodVisitor(Opcodes.ASM4, staticIsolator, acc, name, desc, className, invivoAdapter, this);
-			ReflectionHackMV reflectionHack = new ReflectionHackMV(Opcodes.ASM4, chrooter,this);
+			ChrootMethodVisitor chrooter = new ChrootMethodVisitor(Opcodes.ASM5, staticIsolator, acc, name, desc, className, invivoAdapter, this);
+			ReflectionHackMV reflectionHack = new ReflectionHackMV(Opcodes.ASM5, chrooter,this);
 			//			LazyCloneInterceptingMethodVisitor cloningIMV = new LazyCloneInterceptingMethodVisitor(Opcodes.ASM4, mv, acc, name, desc);
 			//			InterceptingMethodVisitor imv = new InterceptingMethodVisitor(Opcodes.ASM4, cloningIMV, acc, name, desc);
 			//			imv.setClassName(className);
@@ -239,7 +238,7 @@ public class InterceptingClassVisitor extends VMVMClassVisitor {
 		if (needToGenerateCLInit) {
 			MethodVisitor mv = super.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "<clinit>", "()V", null, null);
 			GeneratorAdapter gmv = new GeneratorAdapter(mv, Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "<clinit>", "()V");
-			InvivoAdapter ia = new InvivoAdapter(Opcodes.ASM4, gmv, Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "<clinit>", "()V", this.className, false);
+			InvivoAdapter ia = new InvivoAdapter(Opcodes.ASM5, gmv, Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "<clinit>", "()V", this.className, false);
 //			SandboxPropogatingMV smv = new SandboxPropogatingMV(Opcodes.ASM4, ia, Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "<clinit>", "()V", className, ia, this, new MethodNode());
 			
 			TypeRememberingLocalVariableSorter lvs2 = new TypeRememberingLocalVariableSorter(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "()V", ia);
@@ -251,8 +250,8 @@ public class InterceptingClassVisitor extends VMVMClassVisitor {
 //				VirtualRuntime.setVMed(i);
 				ia.println(className + " clinit " + i);
 				gmv.visitIntInsn(Opcodes.SIPUSH, i);
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "setVMed", "(I)"+Type.getDescriptor(VMState.class));
-				ia.visitMethodInsn(INVOKESTATIC, className, "_clinit$$vmvmoriginal", "("+Type.getDescriptor(VMState.class)+")V");
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "setVMed", "(I)"+Type.getDescriptor(VMState.class), false);
+				ia.visitMethodInsn(INVOKESTATIC, className, "_clinit$$vmvmoriginal", "("+Type.getDescriptor(VMState.class)+")V", false);
 			}
 			ia.visitInsn(Opcodes.RETURN);
 			ia.visitMaxs(0, 0);

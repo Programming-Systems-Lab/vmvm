@@ -1,19 +1,18 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.AdviceAdapter;
-
 import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.AdviceAdapter;
 
 public class JUnitRunnerMV extends AdviceAdapter {
 	private String name;
 	private String className;
 
 	public JUnitRunnerMV(MethodVisitor mv, int access, String name, String desc, String className) {
-		super(Opcodes.ASM4, mv, access, name, desc);
+		super(Opcodes.ASM5, mv, access, name, desc);
 		this.name = name;
 		this.className = className;
 		if (name.equals("<init>") && className.equals("org/apache/tools/ant/taskdefs/optional/junit/JUnitTestRunner"))
@@ -21,12 +20,12 @@ public class JUnitRunnerMV extends AdviceAdapter {
 	}
 
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 //		if (owner.equals("org/apache/tools/ant/taskdefs/optional/junit/JUnitTestRunner") && name.equals("launch"))
 //		{
 //			super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "resetStatics", "()V");
 //		}
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 	@Override
 	public void visitCode() {

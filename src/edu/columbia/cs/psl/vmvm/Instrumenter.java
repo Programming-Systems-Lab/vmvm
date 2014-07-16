@@ -33,26 +33,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.SerialVersionUIDAdder;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicInterpreter;
-import org.objectweb.asm.tree.analysis.Frame;
-import org.objectweb.asm.util.CheckClassAdapter;
-
 import com.sun.org.apache.bcel.internal.generic.INVOKESTATIC;
 
 import edu.columbia.cs.psl.vmvm.asm.ClinitPrintingCV;
@@ -66,6 +46,25 @@ import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFinalMutibleizer;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassReader;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.SerialVersionUIDAdder;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AbstractInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.InsnList;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.AnalyzerException;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.BasicInterpreter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.Frame;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.util.CheckClassAdapter;
 
 public class Instrumenter {
 	public static URLClassLoader loader;
@@ -658,14 +657,14 @@ public class Instrumenter {
 			gmv.visitFieldInsn(Opcodes.PUTSTATIC, cn.name+"$vmvmReseter", Constants.VMVM_NEEDS_RESET, "Z");
 			
 			gmv.visitLdcInsn(Type.getType("L" + cn.name+"$vmvmReseter"+ ";"));
-			gmv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V");
+			gmv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V",false);
 			
 			if(StaticFieldIsolatorMV.CLINIT_ORDER_DEBUG)
 			{
 
 			gmv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
 			gmv.visitLdcInsn("clinit  rerunning>" + cn.name+"$vmvmReseter");
-			gmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+			gmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V",false);
 			}
 
 			
@@ -692,7 +691,7 @@ public class Instrumenter {
 		         mv.visitMethodInsn(Opcodes.INVOKESPECIAL,
 		                 "java/lang/Object",
 		                 "<init>",
-		                 "()V");
+		                 "()V", false);
 		         mv.visitInsn(Opcodes.RETURN);
 		         mv.visitMaxs(1, 1);
 		         mv.visitEnd();
@@ -861,7 +860,7 @@ public class Instrumenter {
 					mn.instructions.add(new FieldInsnNode(fn.getOpcode(), fn.owner, fn.name, fn.desc));
 				} else if (in.getType() == AbstractInsnNode.METHOD_INSN) {
 					MethodInsnNode min = (MethodInsnNode) in;
-					mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc));
+					mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc,min.itf));
 					//Add to the callgraph
 
 					if(methods.containsKey(min.owner+"."+min.name+min.desc))
@@ -947,7 +946,7 @@ public class Instrumenter {
 						mn.instructions.add(new FieldInsnNode(fn.getOpcode(), fn.owner, fn.name, fn.desc));
 					} else if (in.getType() == AbstractInsnNode.METHOD_INSN) {
 						MethodInsnNode min = (MethodInsnNode) in;
-						mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc));
+						mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc, false));
 					}
 				}
 				if(m.name.equals("<clinit>") && (cn.access & Opcodes.ACC_INTERFACE) != 0)

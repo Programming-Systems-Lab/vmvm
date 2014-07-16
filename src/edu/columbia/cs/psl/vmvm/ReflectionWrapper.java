@@ -7,9 +7,8 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.objectweb.asm.Type;
-
 import edu.columbia.cs.psl.vmvm.agent.VMVMClassFileTransformer;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
 
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz)

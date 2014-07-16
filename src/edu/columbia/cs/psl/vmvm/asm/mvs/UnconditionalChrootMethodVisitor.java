@@ -6,14 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.tree.MethodInsnNode;
-
 import com.sun.org.apache.bcel.internal.generic.INVOKESPECIAL;
 import com.sun.org.apache.xml.internal.utils.UnImplNode;
 
@@ -22,6 +14,13 @@ import edu.columbia.cs.psl.vmvm.VMState;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodInsnNode;
 import edu.columbia.cs.psl.vmvm.chroot.ChrootUtils;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.AdviceAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
 
 public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 	public static HashMap<String, String> fsInputMethods = new HashMap<>();
@@ -61,7 +60,7 @@ public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 	}
 
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		
 		if (fsInputMethods.containsKey(owner + "." + name + desc) || fsOutputMethods.contains(owner + "." + name + desc)) {
 			if (!superInit) {
@@ -132,7 +131,7 @@ public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 				else
 					super.visitInsn(ICONST_0);
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "chrootCapture" + (captureType.endsWith("INV") ? "INV" : ""), "(" + typeToVirtualize.getDescriptor()
-						+ "Z)" + typeToVirtualize.getDescriptor());
+						+ "Z)" + typeToVirtualize.getDescriptor(), false);
 				if (swapBack)
 					visitInsn(SWAP);
 				//			mi.desc= desc;
@@ -148,7 +147,7 @@ public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 				//				}
 			}
 		}
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 
 	public static void sandboxCallToFSOutputMethod(MethodVisitor mv, int opcode, String owner, String name, String desc) {
@@ -157,18 +156,18 @@ public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 		switch (args.length) {
 		case 0:
 			captureArgType = "L" + owner + ";";
-			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType);
+			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType, false);
 //			mv.visitMethodInsn(opcode, owner, name, desc);
 			break;
 		case 1:
 			captureArgType = args[0].getDescriptor();
-			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType);
+			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType, false);
 //			mv.visitMethodInsn(opcode, owner, name, desc);
 			break;
 		case 2:
 			captureArgType = args[0].getDescriptor();
 			mv.visitInsn(SWAP);
-			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType);
+			mv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "logFileWrite", "(" + captureArgType + ")"+captureArgType, false);
 //			mv.visitMethodInsn(opcode, owner, name, desc);
 			mv.visitInsn(SWAP);
 			break;
@@ -176,7 +175,7 @@ public class UnconditionalChrootMethodVisitor extends AdviceAdapter {
 			break;
 		}
 		if (captureArgType == null) {
-			mv.visitMethodInsn(opcode, Type.getInternalName(ChrootUtils.class), name, desc);
+			mv.visitMethodInsn(opcode, Type.getInternalName(ChrootUtils.class), name, desc, false);
 		} else {
 
 		}

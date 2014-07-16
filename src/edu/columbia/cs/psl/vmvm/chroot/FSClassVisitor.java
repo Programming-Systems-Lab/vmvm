@@ -2,9 +2,9 @@ package edu.columbia.cs.psl.vmvm.chroot;
 
 import java.util.HashMap;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
 
 public class FSClassVisitor extends ClassVisitor {
 	

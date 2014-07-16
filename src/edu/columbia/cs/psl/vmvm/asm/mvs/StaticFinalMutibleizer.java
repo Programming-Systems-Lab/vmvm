@@ -1,15 +1,14 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
 import edu.columbia.cs.psl.vmvm.struct.MutableInstance;
 
 public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes {
@@ -17,7 +16,7 @@ public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes 
 	private String className;
 
 	public StaticFinalMutibleizer(MethodVisitor mv, int access, String className, String name, String desc) {
-		super(mv, access, name, desc);
+		super(Opcodes.ASM5, mv, access, name, desc);
 		this.mName = name;
 		this.className = className;
 	}
@@ -48,7 +47,7 @@ public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes 
 			Type originalType = Type.getType(desc);
 			if (opcode == GETSTATIC) {
 				super.visitFieldInsn(opcode, owner, name, Type.getDescriptor(MutableInstance.class));
-				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;");
+				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;", false);
 				if (originalType.getSort() == Type.OBJECT || originalType.getSort() == Type.ARRAY) {
 					super.visitTypeInsn(CHECKCAST, originalType.getInternalName());
 				} else//primitive needs to be cast to the boxed type then unboxed

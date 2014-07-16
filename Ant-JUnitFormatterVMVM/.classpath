@@ -6,6 +6,6 @@
 	<classpathentry kind="lib" path="lib/ant-junit-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/ant-1.7.0.jar"/>
 	<classpathentry kind="lib" path="lib/mysql-connector-java-5.0.8-bin.jar"/>
-	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.11.jar" sourcepath="/Users/jon/.m2/repository/junit/junit/4.11/junit-4.11-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

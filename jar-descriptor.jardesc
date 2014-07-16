@@ -11,16 +11,25 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.xml"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;org"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.chroot"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.signature"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.struct"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.util"/>
         <file path="/VMVM/.project"/>
         <file path="/VMVM/.gitignore"/>
-        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.agent"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm"/>
-        <javaElement handleIdentifier="=VMVM/src&lt;"/>
-        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.chroot"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.struct"/>
         <file path="/VMVM/.classpath"/>
-        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.struct"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.optimizer"/>
+        <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.mvs"/>
+        <file path="/VMVM/src/log4j.properties"/>
     </selectedElements>
 </jardesc>

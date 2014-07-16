@@ -1,10 +1,9 @@
 package edu.columbia.cs.psl.vmvm.asm;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-
 import edu.columbia.cs.psl.vmvm.Constants;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
 
 public class ClinitPrintingCV extends VMVMClassVisitor {
 
@@ -23,12 +22,12 @@ public class ClinitPrintingCV extends VMVMClassVisitor {
 		MethodVisitor smv = super.visitMethod(access, name, desc, signature, exceptions);
 		if(name.equals("<clinit>"))
 		{
-			return new MethodVisitor(Opcodes.ASM4,smv) {
+			return new MethodVisitor(Opcodes.ASM5,smv) {
 				@Override
 				public void visitCode() {
 					super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
 					super.visitLdcInsn("clinit  rerunning>" + className);
-					super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+					super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 					super.visitCode();
 				}
 				@Override
@@ -36,7 +35,7 @@ public class ClinitPrintingCV extends VMVMClassVisitor {
 					if (opcode == Opcodes.RETURN) {
 						super.visitFieldInsn(GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
 						super.visitLdcInsn("clinit finished rerunning>" + className);
-						super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+						super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 					}
 					super.visitInsn(opcode);
 				}

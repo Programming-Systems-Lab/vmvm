@@ -6,17 +6,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.tree.LocalVariableNode;
-
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VMState;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.LocalVariableNode;
 
 public class InvivoAdapter extends CloningAdapter implements Opcodes {
 	protected int access;
@@ -53,7 +52,7 @@ public class InvivoAdapter extends CloningAdapter implements Opcodes {
 			}
 			Type[] args2 = new Type[args.length-1];
 			System.arraycopy(args, 0, args2, 0, args.length-1);
-			gv.visitMethodInsn(INVOKEVIRTUAL, className, name.substring(1), Type.getMethodDescriptor(Type.getReturnType(desc), args2));
+			gv.visitMethodInsn(INVOKEVIRTUAL, className, name.substring(1), Type.getMethodDescriptor(Type.getReturnType(desc), args2), false);
 //			switch(Type.getReturnType(desc).getSort())
 //			{
 //			case Type.ARRAY:
@@ -220,7 +219,7 @@ public class InvivoAdapter extends CloningAdapter implements Opcodes {
 
 	public void getSandboxFlag() {
 		getSandboxFlagState();
-		super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(VMState.class), "getState", "()I");
+		super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(VMState.class), "getState", "()I", false);
 	}
 
 	private boolean isClinit() {
