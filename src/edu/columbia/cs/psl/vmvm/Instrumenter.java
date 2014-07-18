@@ -98,15 +98,16 @@ public class Instrumenter {
 	static
 	{
 		try{
-//		Scanner s = new Scanner(new File("ignored-clinits.txt"));
-//		while(s.hasNextLine())
-//			ignoredClasses.add(s.nextLine());
-//		s.close();
+		Scanner s = new Scanner(Instrumenter.class.getResourceAsStream("ignored-clinits"));
+		while(s.hasNextLine())
+			ignoredClasses.add(s.nextLine());
+		System.out.println(ignoredClasses);
+		s.close();
 		}
 		catch(Exception ex)
 		{
-			//nop
 			ex.printStackTrace();
+			//nop
 		}
 	}
 	private static final ClassVisitorFactory cvFactory = 

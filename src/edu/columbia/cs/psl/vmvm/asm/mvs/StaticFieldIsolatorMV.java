@@ -62,7 +62,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 				MethodListClassNode superN = Instrumenter.instrumentedClasses.get(superz);
 //				if(cv.getClassName().contains("ClassImposterizer"))
 //				System.err.println(superN.name + " " + (superN.hasClinit ? "T" : "F"));
-				if (superN != null && superN.hasClinit) {
+				if (superN != null && superN.hasClinit && !Instrumenter.ignoredClasses.contains(superz)) {
 					checkAndReinit(superz);
 //					Label continu = new Label();
 //					super.visitFieldInsn(GETSTATIC, superz, Constants.VMVM_NEEDS_RESET, "Z");
@@ -170,7 +170,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 	public void visitTypeInsn(int opcode, String type) {
 		String _type = type.replace("[", "");
 		MethodListClassNode cn = Instrumenter.instrumentedClasses.get(_type);
-		if (cn != null && cn.hasClinit && opcode == NEW) {
+		if (cn != null && cn.hasClinit && opcode == NEW && !Instrumenter.ignoredClasses.contains(type)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";
@@ -205,7 +205,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		if (cn == null)
 			cn = Instrumenter.instrumentedClasses.get(owner);
 
-		if (cn != null && cn.hasClinit && opcode == INVOKESTATIC) {
+		if (cn != null && cn.hasClinit && opcode == INVOKESTATIC && !Instrumenter.ignoredClasses.contains(owner)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";
@@ -316,7 +316,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		if (cn == null)
 			cn = Instrumenter.instrumentedClasses.get(owner);
 
-		if (cn != null && cn.hasClinit && (opcode == GETSTATIC || opcode == PUTSTATIC)) {
+		if (cn != null && cn.hasClinit && (opcode == GETSTATIC || opcode == PUTSTATIC) && !Instrumenter.ignoredClasses.contains(owner)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";

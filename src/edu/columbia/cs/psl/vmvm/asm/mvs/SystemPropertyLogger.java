@@ -116,9 +116,13 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 				String newName = name.replace("set", "get");
 				if(owner.equals("javax/swing/JDialog") || owner.equals("javax/swing/JFrame"))
 					newName = name.replace("set", "is");
-				if(owner.equals("java/lang/System") && (name.equals("setOut") || name.equals("setErr")))
+				if(owner.equals("java/lang/System") && (name.equals("setOut") || name.equals("setErr") || name.equals("setIn")))
 				{				
 					super.visitFieldInsn(Opcodes.GETSTATIC, owner, name.replace("set", "").toLowerCase(), args[0].getDescriptor());
+				}
+				else if(owner.equals("java/net/Authenticator") && name.equals("setDefault"))
+				{
+					super.visitInsn(Opcodes.ACONST_NULL);
 				}
 				else
 				{
@@ -147,8 +151,7 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 				//Do the log
 				//box if necessary
 				box(args[0]);
-				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
-
+				super.visitIntInsn(Opcodes.BIPUSH, clazz.removeMethods.get(name));
 				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalRemove", "(Ljava/lang/Object;I)V", false);
 			}
 		}

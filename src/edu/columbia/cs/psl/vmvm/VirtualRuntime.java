@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.rmi.activation.ActivationException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +79,22 @@ public class VirtualRuntime {
 		}
 	}
 
+	private static Field URLStreamHandlerField;
 	private static void resetInternalStatics() {
+		if(URLStreamHandlerField == null)
+		{
+			try {
+				URLStreamHandlerField = URL.class.getDeclaredField("factory");
+				URLStreamHandlerField.setAccessible(true);
+			} catch (NoSuchFieldException e) {
+			} catch (SecurityException e) {
+			}
+		}
+		try {
+			URLStreamHandlerField.set(null, null);
+		} catch (Throwable t) {
+		}
+
 		if (logsUsed[44]) {
 			try {
 				javax.security.auth.Policy.setPolicy((javax.security.auth.Policy) loggedValues[44]);
