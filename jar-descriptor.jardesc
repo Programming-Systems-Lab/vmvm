@@ -10,7 +10,7 @@
             <packagesToUnSeal/>
         </sealing>
     </manifest>
-    <selectedElements exportClassFiles="false" exportJavaFiles="false" exportOutputFolder="true">
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.xml"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm"/>
         <javaElement handleIdentifier="=VMVM/src&lt;org"/>
@@ -30,6 +30,5 @@
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.optimizer"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.mvs"/>
-        <file path="/VMVM/src/log4j.properties"/>
     </selectedElements>
 </jardesc>

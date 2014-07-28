@@ -17,6 +17,7 @@ import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.util.Printer;
 
 public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
@@ -226,10 +227,11 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 ////			return;
 //		}
 		
+		Label allDone = new Label();
 		if(JUnitResettingClassVisitor.shouldIgnoreClass(clazz))
 			return;
 		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); //Need to force to make sure that this is initialized before we can get a lock on it.
-		super.visitInsn(POP);
+		super.visitJumpInsn(IFEQ, allDone);
 		
 		Label continu = new Label();
 //			if(CLINIT_ORDER_DEBUG)
@@ -301,6 +303,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
 		super.visitLabel(continu);
 		super.monitorexit();
+		super.visitLabel(allDone);
 	}
 	void magic() throws InterruptedException
 	{

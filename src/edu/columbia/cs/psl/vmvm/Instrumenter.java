@@ -54,6 +54,7 @@ import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.JSRInlinerAdapter;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.SerialVersionUIDAdder;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AbstractInsnNode;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
@@ -101,7 +102,6 @@ public class Instrumenter {
 		Scanner s = new Scanner(Instrumenter.class.getResourceAsStream("ignored-clinits"));
 		while(s.hasNextLine())
 			ignoredClasses.add(s.nextLine());
-		System.out.println(ignoredClasses);
 		s.close();
 		}
 		catch(Exception ex)
@@ -143,6 +143,10 @@ public class Instrumenter {
 			calculateMutableClasses();
 			calculateIgnoredReRunningClinits();
 			calculatedWhatsClinitedPerMethod();
+			if(DEBUG)
+			{
+				System.out.println("Ignored clinits: " + ignoredClasses);
+			}
 			break;
 		case PASS_OUTPUT:
 			File genDir = new File(rootOutputDir,"gen");
@@ -391,10 +395,10 @@ public class Instrumenter {
 				if(cn.clInitCalculatedNecessary)
 					System.err.println("clinit necessary");
 			}
-//			if(cn.hasClinit && ! cn.clInitCalculatedNecessary)
-//			{
-//				System.out.println("Safely ignoring clinit on  " + cn.name);
-//			}
+			if(DEBUG && cn.hasClinit && ! cn.clInitCalculatedNecessary)
+			{
+				System.out.println("Safely ignoring clinit on  " + cn.name);
+			}
 			cn.hasClinit = cn.hasClinit && cn.clInitCalculatedNecessary;
 
 		}
@@ -532,6 +536,8 @@ public class Instrumenter {
 		public byte[] intfc;
 		public byte[] intfcReseter;
 	}
+	static final boolean FORCE_UPGRADE_CLASS = true;
+	
 	public static InstrumentResult instrumentClass(String path, InputStream is, boolean renameInterfaces) {
 		try {
 			InstrumentResult out = new InstrumentResult();
@@ -550,6 +556,25 @@ public class Instrumenter {
 			ClassNode cn = new ClassNode();
 			cr.accept(cn, ClassReader.SKIP_FRAMES);
 
+			if(FORCE_UPGRADE_CLASS && (cn.version < 50 || cn.version > 1000))
+			{
+				ClassWriter cw = new InstrumenterClassWriter(cr, ClassWriter.COMPUTE_FRAMES, loader);
+				cr.accept(new ClassVisitor(Opcodes.ASM5,cw) {
+					@Override
+					public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+						version = 50;
+						if((access & Opcodes.ACC_INTERFACE) != 0)
+							access |= Opcodes.ACC_ABSTRACT;
+						super.visit(version, access, name, signature, superName, interfaces);
+					}
+					public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+						return new JSRInlinerAdapter(super.visitMethod(access, name, desc, signature, exceptions), access, name, desc, signature, exceptions);
+					}
+				}, ClassReader.EXPAND_FRAMES);
+				cr = new ClassReader(cw.toByteArray());
+				cn = new ClassNode();
+				cr.accept(cn, ClassReader.SKIP_FRAMES);
+			}
 			ClassWriter cw = new InstrumenterClassWriter(cr, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES, loader);
 
 			VMVMClassVisitor cv = cvFactory.getVisitor(cw, cn, true);

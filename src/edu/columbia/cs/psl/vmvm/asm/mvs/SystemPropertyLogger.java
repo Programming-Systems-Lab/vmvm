@@ -1,18 +1,12 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
 
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
-import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
 
 public class SystemPropertyLogger extends GeneratorAdapter {
 
@@ -99,7 +93,12 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name,
 			String desc, boolean itfc) {
-
+		if(owner.equals(Type.getInternalName(Runtime.class)) && name.equals("addShutdownHook"))
+		{
+			owner = Type.getInternalName(VirtualRuntime.class);
+			desc = "("+Type.getDescriptor(Runtime.class)+Type.getDescriptor(Thread.class)+")V";
+			opcode = Opcodes.INVOKESTATIC;
+		}
 		if((owner.equals("java/lang/System") && name.equals("setProperty") && desc.equals("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"))
 				|| (owner.equals("java/lang/System") && name.equals("setProperties") && desc.equals("(Ljava/util/Properties;)V")))
 		{

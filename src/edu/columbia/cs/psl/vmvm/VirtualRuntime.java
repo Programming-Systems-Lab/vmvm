@@ -774,10 +774,24 @@ public class VirtualRuntime {
 		return state;
 	}
 
+	private static HashSet<Thread> shutdownHooks = new HashSet<Thread>();
+	public static void addShutdownHook(Runtime r, Thread t)
+	{
+		synchronized (shutdownHooks) {
+			r.addShutdownHook(t);
+			shutdownHooks.add(t);
+		}
+	}
 	public static void resetStatics() {
 		System.err.println("\n\n>>>>>>>>>>>Resetting statics (" + classes.size() + ") <<<<<<<<<<\n\n");
 		resetInternalStatics();
-		//		new Exception().printStackTrace();
+		synchronized (shutdownHooks) {
+			for(Thread t: shutdownHooks)
+			{
+				Runtime.getRuntime().removeShutdownHook(t);
+			}
+			shutdownHooks.clear();
+		}
 		synchronized (classes) {
 			for (String s : properties.keySet()) {
 				//				System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
@@ -814,7 +828,7 @@ public class VirtualRuntime {
 					System.err.println("Skipping something null in reset!");
 					continue;
 				}
-				//					System.err.println("Calling reset on z " + c.getName());
+//									System.err.println("Calling reset on z " + c.getName());
 				//				if(!c.getName().contains("tomcat") && ! c.getName().contains("catalina") )
 				try {
 					//					Method m = c.getMethod(Constants.VMVM_STATIC_RESET_METHOD);
@@ -892,7 +906,7 @@ public class VirtualRuntime {
 		//				System.err.println("Running thread still up: " + t + "; cl: " + t.getContextClassLoader());
 		//			}
 		//		}
-		System.err.println("VR Classloader: " + Thread.currentThread().getContextClassLoader());
+//		System.err.println("VR Classloader: " + Thread.currentThread().getContextClassLoader());
 	}
 
 	public static class InternalStaticClass {
