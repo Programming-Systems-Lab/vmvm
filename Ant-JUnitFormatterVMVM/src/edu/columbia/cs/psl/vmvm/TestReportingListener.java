@@ -105,7 +105,7 @@ static int nErrors;
 			PreparedStatement ps = db.prepareStatement("INSERT INTO test_result_test (test_execution_id,test,time,output,success,nTestMethods,start,end,nFailures,nErrors) VALUES (?,?,?,?,?,?,?,?,?,?)");
 			ps.setInt(1, testID);
 			ps.setString(2, res.name);
-			ps.setLong(3, res.finished-res.startTime);
+			ps.setLong(3, arg0.getRunTime());
 			ps.setString(4, "Stdout:\n"+res.stdout.toString()+"\n\nStderr:\n"+res.stderr.toString());
 			ps.setInt(5, nFailures>0?0:1);
 			ps.setInt(6, res.nMethods);
@@ -143,6 +143,10 @@ static int nErrors;
 		nFailures=0;
 		nErrors=0;
 		res = (new TestResult(arg0.getName()));
+		if(arg0.getProperties() == null || arg0.getProperties().getProperty("workerStartTime") == null)
+			res.startTime = System.currentTimeMillis();
+		else
+			res.startTime = Long.valueOf(arg0.getProperties().getProperty("workerStartTime"));
 	}
 
 	class TestResult

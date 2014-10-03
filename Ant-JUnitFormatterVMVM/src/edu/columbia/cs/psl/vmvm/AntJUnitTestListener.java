@@ -56,8 +56,6 @@ public class AntJUnitTestListener implements JUnitResultFormatter{
 	@Override
 	public void endTest(Test arg0) {
 		// TODO Auto-generated method stub
-		VirtualRuntime.resetStatics();		
-
 	}
 
 	@Override

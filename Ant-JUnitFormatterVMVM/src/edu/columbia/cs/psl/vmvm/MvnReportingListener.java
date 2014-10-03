@@ -52,7 +52,7 @@ public class MvnReportingListener extends RunListener{
 	static Connection getConnection() {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			return DriverManager.getConnection("jdbc:mysql://molly.cs.columbia.edu/foss?user=foss&password=f055");
+			return DriverManager.getConnection("jdbc:mysql://127.0.0.1/foss?user=foss&password=f055");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

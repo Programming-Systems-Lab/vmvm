@@ -35,7 +35,7 @@ public class StaticFinalMutibleizer extends GeneratorAdapter implements Opcodes 
 			return false;
 		else if((owningNode.access & Opcodes.ACC_INTERFACE) != 0){
 			FieldNode fn = Instrumenter.getFieldNode(owner, name);
-			if(fn.value == null)
+			if(fn!= null && fn.value == null)
 				return true;
 			return false;
 		}

@@ -108,6 +108,7 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 				|| name.startsWith("org/apache/tomcat/util/buf/B2CConverter")
 				|| name.startsWith("org/apache/ivy/plugins/lock/DeleteOnExitHook")
 				|| name.startsWith("org/apache/hadoop/io/Text")
+				|| name.startsWith("org/apache/hadoop")
 				;
 	}
 

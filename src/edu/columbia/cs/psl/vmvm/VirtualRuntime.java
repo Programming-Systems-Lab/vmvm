@@ -53,31 +53,6 @@ public class VirtualRuntime {
 		}
 	}
 
-	public static HashMap<String, InternalStaticClass> internalStatics = new HashMap<>();
-	static {
-		int n = 0;
-		Scanner s = new Scanner(VirtualRuntime.class.getResourceAsStream("internal-statics"));
-		while (s.hasNextLine()) {
-			String l = s.nextLine();
-			String[] d = l.split("\t");
-			String name = d[0];
-			InternalStaticClass c = new InternalStaticClass();
-			for (String z : d[1].split(",")) {
-				if (z.length() > 0)
-					c.addMethods.put(z, ++n);
-			}
-			for (String z : d[2].split(","))
-				if (z.length() > 0)
-					c.removeMethods.put(z, ++n);
-			for (String z : d[3].split(","))
-				if (z.length() > 0)
-					c.setMethods.put(z, ++n);
-			for (String z : d[4].split(","))
-				if (z.length() > 0)
-					c.getMethods.put(z, -1);
-			internalStatics.put(name, c);
-		}
-	}
 
 	private static Field URLStreamHandlerField;
 	private static void resetInternalStatics() {
@@ -909,16 +884,5 @@ public class VirtualRuntime {
 //		System.err.println("VR Classloader: " + Thread.currentThread().getContextClassLoader());
 	}
 
-	public static class InternalStaticClass {
-		HashMap<String, Integer> getMethods = new HashMap<>();
-		public HashMap<String, Integer> setMethods = new HashMap<>();
-		public HashMap<String, Integer> addMethods = new HashMap<>();
-		public HashMap<String, Integer> removeMethods = new HashMap<>();
-
-		@Override
-		public String toString() {
-			return "InternalStaticClass [getMethods=" + getMethods + ", setMethods=" + setMethods + ", addMethods=" + addMethods + ", removeMethods=" + removeMethods + "]";
-		}
-
-	}
+	
 }

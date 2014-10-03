@@ -536,7 +536,7 @@ public class Instrumenter {
 		public byte[] intfc;
 		public byte[] intfcReseter;
 	}
-	static final boolean FORCE_UPGRADE_CLASS = true;
+	static final boolean FORCE_UPGRADE_CLASS = false;
 	
 	public static InstrumentResult instrumentClass(String path, InputStream is, boolean renameInterfaces) {
 		try {

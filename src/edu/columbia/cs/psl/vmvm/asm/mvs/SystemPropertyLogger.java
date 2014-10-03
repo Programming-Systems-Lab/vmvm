@@ -1,6 +1,8 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Scanner;
 
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
@@ -17,9 +19,9 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 	}
 	public static void main(String[] args)
 	{
-		for(String clazz : VirtualRuntime.internalStatics.keySet())
+		for(String clazz : internalStatics.keySet())
 			{
-			VirtualRuntime.InternalStaticClass c = VirtualRuntime.internalStatics.get(clazz);
+			InternalStaticClass c = internalStatics.get(clazz);
 				for(String s : c.setMethods.keySet())
 				{
 					String fullSetMethod = clazz.replace("/", ".")+"."+s;
@@ -90,6 +92,32 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 //				}
 			}
 	}
+
+	public static HashMap<String, InternalStaticClass> internalStatics = new HashMap<>();
+	static {
+		int n = 0;
+		Scanner s = new Scanner(VirtualRuntime.class.getResourceAsStream("internal-statics"));
+		while (s.hasNextLine()) {
+			String l = s.nextLine();
+			String[] d = l.split("\t");
+			String name = d[0];
+			InternalStaticClass c = new InternalStaticClass();
+			for (String z : d[1].split(",")) {
+				if (z.length() > 0)
+					c.addMethods.put(z, ++n);
+			}
+			for (String z : d[2].split(","))
+				if (z.length() > 0)
+					c.removeMethods.put(z, ++n);
+			for (String z : d[3].split(","))
+				if (z.length() > 0)
+					c.setMethods.put(z, ++n);
+			for (String z : d[4].split(","))
+				if (z.length() > 0)
+					c.getMethods.put(z, -1);
+			internalStatics.put(name, c);
+		}
+	}
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name,
 			String desc, boolean itfc) {
@@ -105,10 +133,10 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 			owner = Type.getInternalName(VirtualRuntime.class);
 			name = "logAndSetProperty";
 		}
-		else if(VirtualRuntime.internalStatics.containsKey(owner))
+		else if(internalStatics.containsKey(owner))
 		{
 			Type[] args =Type.getArgumentTypes(desc);
-			VirtualRuntime.InternalStaticClass clazz = VirtualRuntime.internalStatics.get(owner);
+			InternalStaticClass clazz = internalStatics.get(owner);
 			if(clazz.setMethods.keySet().contains(name) && args.length == 1)
 			{
 				//insert a fake get
@@ -157,5 +185,16 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 
-	
+	public static class InternalStaticClass {
+		public HashMap<String, Integer> getMethods = new HashMap<>();
+		public HashMap<String, Integer> setMethods = new HashMap<>();
+		public HashMap<String, Integer> addMethods = new HashMap<>();
+		public HashMap<String, Integer> removeMethods = new HashMap<>();
+
+		@Override
+		public String toString() {
+			return "InternalStaticClass [getMethods=" + getMethods + ", setMethods=" + setMethods + ", addMethods=" + addMethods + ", removeMethods=" + removeMethods + "]";
+		}
+
+	}
 }

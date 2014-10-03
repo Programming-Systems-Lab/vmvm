@@ -5,7 +5,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import edu.columbia.cs.psl.vmvm.agent.VMVMClassFileTransformer;
 import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
@@ -76,26 +75,26 @@ public class ReflectionWrapper {
 	}
 	public static int getModifiers(Class<?> c)
 	{
-		VMVMClassFileTransformer.ensureInit();
+//		VMVMClassFileTransformer.ensureInit();
 		int ret = c.getModifiers();
-		if(Instrumenter.finalClasses.contains(c.getName().replace(".", "/")))
-			ret = ret | Modifier.FINAL;
+//		if(Instrumenter.finalClasses.contains(c.getName().replace(".", "/")))
+//			ret = ret | Modifier.FINAL;
 		return ret;
 	}
 	public static int getModifiers(Method m)
 	{
-		VMVMClassFileTransformer.ensureInit();
+//		VMVMClassFileTransformer.ensureInit();
 		int ret = m.getModifiers();
-		if(Instrumenter.finalMethods.contains(m.getDeclaringClass().getName().replace(".", "/") + "."+Type.getMethodDescriptor(m)))
-			ret = ret | Modifier.FINAL;
+//		if(Instrumenter.finalMethods.contains(m.getDeclaringClass().getName().replace(".", "/") + "."+Type.getMethodDescriptor(m)))
+//			ret = ret | Modifier.FINAL;
 		return ret;
 	}
 	public static int getModifiers(Field f)
 	{
-		VMVMClassFileTransformer.ensureInit();
+//		VMVMClassFileTransformer.ensureInit();
 		int ret = f.getModifiers();
-		if(Instrumenter.finalFields.contains(f.getDeclaringClass().getName().replace(".", "/") + "."+Type.getDescriptor(f.getType())))
-			ret = ret | Modifier.FINAL;
+//		if(Instrumenter.finalFields.contains(f.getDeclaringClass().getName().replace(".", "/") + "."+Type.getDescriptor(f.getType())))
+//			ret = ret | Modifier.FINAL;
 		return ret;
 	}
 	public static void tryToInit(Class<?> clazz) {
