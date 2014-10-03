@@ -6,13 +6,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-
-import com.sun.xml.internal.ws.org.objectweb.asm.Opcodes;
-
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.InsnList;
 
 public class MethodListClassNode extends ClassNode implements Serializable {
 	/**
@@ -28,6 +26,10 @@ public class MethodListClassNode extends ClassNode implements Serializable {
 	public HashSet<EqMethodNode> methodsHashSet = new HashSet<>();
 	public boolean isMutable;
 	
+	public MethodListClassNode()
+	{
+		super(Opcodes.ASM5);
+	}
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		// default serialization 
 		oos.defaultWriteObject();

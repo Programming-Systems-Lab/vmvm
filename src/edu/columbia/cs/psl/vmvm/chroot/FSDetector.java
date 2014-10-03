@@ -16,10 +16,10 @@ import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassReader;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
 
 
 public class FSDetector {
@@ -104,7 +104,7 @@ public class FSDetector {
 				cn2.interfaces = cn.interfaces;
 				classInfo.put(name, cn2);
 				ClassReader cr = new ClassReader(name);
-				FSClassVisitor ccv = new FSClassVisitor(Opcodes.ASM4, new ClassWriter(0), methodMap, classMap);
+				FSClassVisitor ccv = new FSClassVisitor(Opcodes.ASM5, new ClassWriter(0), methodMap, classMap);
 				cr.accept(ccv, 0);
 				i++;
 				if (i % 1000 == 0)

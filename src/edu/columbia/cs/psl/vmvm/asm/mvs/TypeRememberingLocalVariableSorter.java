@@ -3,14 +3,15 @@ package edu.columbia.cs.psl.vmvm.asm.mvs;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.LocalVariablesSorter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class TypeRememberingLocalVariableSorter extends LocalVariablesSorter{
 
 	public TypeRememberingLocalVariableSorter(int access, String desc, MethodVisitor mv) {
-		super(access, desc, mv);
+		super(Opcodes.ASM5, access, desc, mv);
 	}
 	HashMap<Integer, Type> localTypes = new HashMap<>();
 	@Override

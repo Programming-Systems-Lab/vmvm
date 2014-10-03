@@ -1,12 +1,11 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-
 import edu.columbia.cs.psl.vmvm.Constants;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.AnnotationVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.AdviceAdapter;
 
 
 public class LazyCloneInterceptingMethodVisitor extends AdviceAdapter implements Constants {

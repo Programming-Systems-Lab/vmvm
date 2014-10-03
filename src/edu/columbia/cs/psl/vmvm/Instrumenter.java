@@ -33,26 +33,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.SerialVersionUIDAdder;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicInterpreter;
-import org.objectweb.asm.tree.analysis.Frame;
-import org.objectweb.asm.util.CheckClassAdapter;
-
 import com.sun.org.apache.bcel.internal.generic.INVOKESTATIC;
 
 import edu.columbia.cs.psl.vmvm.asm.ClinitPrintingCV;
@@ -60,30 +40,74 @@ import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.IntializedTypeAnalyzer;
 import edu.columbia.cs.psl.vmvm.asm.IntializedTypeAnalyzer.Node;
 import edu.columbia.cs.psl.vmvm.asm.JUnitResettingClassVisitor;
+import edu.columbia.cs.psl.vmvm.asm.MethodVisitorFactory;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFieldIsolatorMV;
 import edu.columbia.cs.psl.vmvm.asm.mvs.StaticFinalMutibleizer;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassReader;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.JSRInlinerAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.SerialVersionUIDAdder;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AbstractInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.InsnList;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.AnalyzerException;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.BasicInterpreter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.Frame;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.util.CheckClassAdapter;
 
 public class Instrumenter {
 	public static URLClassLoader loader;
 	public static final boolean DEBUG=false;
 	
+	public static MethodVisitorFactory methodVisitorFactory;
+	static
+	{
+		try{
+			//Load properties file
+			Scanner s = new Scanner(Instrumenter.class.getResourceAsStream("vmvm.properties"));
+			while(s.hasNextLine())
+			{
+				String[] d = s.nextLine().split("=");
+				if(d[0].equals("methodVisitorFactory"))
+				{
+					methodVisitorFactory = (MethodVisitorFactory) Class.forName(d[1]).newInstance();
+				}
+				else
+					System.err.println("Warn: ignoring option "+d[0]+"="+d[1]);
+			}
+			s.close();
+		}
+		catch(Throwable t)
+		{
+			//nop
+		}
+	}
 	public static HashSet<String> ignoredClasses = new HashSet<>();
 	static
 	{
 		try{
-//		Scanner s = new Scanner(new File("ignored-clinits.txt"));
-//		while(s.hasNextLine())
-//			ignoredClasses.add(s.nextLine());
-//		s.close();
+		Scanner s = new Scanner(Instrumenter.class.getResourceAsStream("ignored-clinits"));
+		while(s.hasNextLine())
+			ignoredClasses.add(s.nextLine());
+		s.close();
 		}
 		catch(Exception ex)
 		{
-			//nop
 			ex.printStackTrace();
+			//nop
 		}
 	}
 	private static final ClassVisitorFactory cvFactory = 
@@ -119,6 +143,10 @@ public class Instrumenter {
 			calculateMutableClasses();
 			calculateIgnoredReRunningClinits();
 			calculatedWhatsClinitedPerMethod();
+			if(DEBUG)
+			{
+				System.out.println("Ignored clinits: " + ignoredClasses);
+			}
 			break;
 		case PASS_OUTPUT:
 			File genDir = new File(rootOutputDir,"gen");
@@ -367,10 +395,10 @@ public class Instrumenter {
 				if(cn.clInitCalculatedNecessary)
 					System.err.println("clinit necessary");
 			}
-//			if(cn.hasClinit && ! cn.clInitCalculatedNecessary)
-//			{
-//				System.out.println("Safely ignoring clinit on  " + cn.name);
-//			}
+			if(DEBUG && cn.hasClinit && ! cn.clInitCalculatedNecessary)
+			{
+				System.out.println("Safely ignoring clinit on  " + cn.name);
+			}
 			cn.hasClinit = cn.hasClinit && cn.clInitCalculatedNecessary;
 
 		}
@@ -508,6 +536,8 @@ public class Instrumenter {
 		public byte[] intfc;
 		public byte[] intfcReseter;
 	}
+	static final boolean FORCE_UPGRADE_CLASS = true;
+	
 	public static InstrumentResult instrumentClass(String path, InputStream is, boolean renameInterfaces) {
 		try {
 			InstrumentResult out = new InstrumentResult();
@@ -526,6 +556,25 @@ public class Instrumenter {
 			ClassNode cn = new ClassNode();
 			cr.accept(cn, ClassReader.SKIP_FRAMES);
 
+			if(FORCE_UPGRADE_CLASS && (cn.version < 50 || cn.version > 1000))
+			{
+				ClassWriter cw = new InstrumenterClassWriter(cr, ClassWriter.COMPUTE_FRAMES, loader);
+				cr.accept(new ClassVisitor(Opcodes.ASM5,cw) {
+					@Override
+					public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+						version = 50;
+						if((access & Opcodes.ACC_INTERFACE) != 0)
+							access |= Opcodes.ACC_ABSTRACT;
+						super.visit(version, access, name, signature, superName, interfaces);
+					}
+					public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+						return new JSRInlinerAdapter(super.visitMethod(access, name, desc, signature, exceptions), access, name, desc, signature, exceptions);
+					}
+				}, ClassReader.EXPAND_FRAMES);
+				cr = new ClassReader(cw.toByteArray());
+				cn = new ClassNode();
+				cr.accept(cn, ClassReader.SKIP_FRAMES);
+			}
 			ClassWriter cw = new InstrumenterClassWriter(cr, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES, loader);
 
 			VMVMClassVisitor cv = cvFactory.getVisitor(cw, cn, true);
@@ -658,14 +707,14 @@ public class Instrumenter {
 			gmv.visitFieldInsn(Opcodes.PUTSTATIC, cn.name+"$vmvmReseter", Constants.VMVM_NEEDS_RESET, "Z");
 			
 			gmv.visitLdcInsn(Type.getType("L" + cn.name+"$vmvmReseter"+ ";"));
-			gmv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V");
+			gmv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V",false);
 			
 			if(StaticFieldIsolatorMV.CLINIT_ORDER_DEBUG)
 			{
 
 			gmv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
 			gmv.visitLdcInsn("clinit  rerunning>" + cn.name+"$vmvmReseter");
-			gmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+			gmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V",false);
 			}
 
 			
@@ -692,7 +741,7 @@ public class Instrumenter {
 		         mv.visitMethodInsn(Opcodes.INVOKESPECIAL,
 		                 "java/lang/Object",
 		                 "<init>",
-		                 "()V");
+		                 "()V", false);
 		         mv.visitInsn(Opcodes.RETURN);
 		         mv.visitMaxs(1, 1);
 		         mv.visitEnd();
@@ -861,7 +910,7 @@ public class Instrumenter {
 					mn.instructions.add(new FieldInsnNode(fn.getOpcode(), fn.owner, fn.name, fn.desc));
 				} else if (in.getType() == AbstractInsnNode.METHOD_INSN) {
 					MethodInsnNode min = (MethodInsnNode) in;
-					mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc));
+					mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc,min.itf));
 					//Add to the callgraph
 
 					if(methods.containsKey(min.owner+"."+min.name+min.desc))
@@ -947,7 +996,7 @@ public class Instrumenter {
 						mn.instructions.add(new FieldInsnNode(fn.getOpcode(), fn.owner, fn.name, fn.desc));
 					} else if (in.getType() == AbstractInsnNode.METHOD_INSN) {
 						MethodInsnNode min = (MethodInsnNode) in;
-						mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc));
+						mn.instructions.add(new MethodInsnNode(min.getOpcode(), min.owner, min.name, min.desc, false));
 					}
 				}
 				if(m.name.equals("<clinit>") && (cn.access & Opcodes.ACC_INTERFACE) != 0)

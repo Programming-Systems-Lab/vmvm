@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.rmi.activation.ActivationException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +79,22 @@ public class VirtualRuntime {
 		}
 	}
 
+	private static Field URLStreamHandlerField;
 	private static void resetInternalStatics() {
+		if(URLStreamHandlerField == null)
+		{
+			try {
+				URLStreamHandlerField = URL.class.getDeclaredField("factory");
+				URLStreamHandlerField.setAccessible(true);
+			} catch (NoSuchFieldException e) {
+			} catch (SecurityException e) {
+			}
+		}
+		try {
+			URLStreamHandlerField.set(null, null);
+		} catch (Throwable t) {
+		}
+
 		if (logsUsed[44]) {
 			try {
 				javax.security.auth.Policy.setPolicy((javax.security.auth.Policy) loggedValues[44]);
@@ -758,10 +774,24 @@ public class VirtualRuntime {
 		return state;
 	}
 
+	private static HashSet<Thread> shutdownHooks = new HashSet<Thread>();
+	public static void addShutdownHook(Runtime r, Thread t)
+	{
+		synchronized (shutdownHooks) {
+			r.addShutdownHook(t);
+			shutdownHooks.add(t);
+		}
+	}
 	public static void resetStatics() {
 		System.err.println("\n\n>>>>>>>>>>>Resetting statics (" + classes.size() + ") <<<<<<<<<<\n\n");
 		resetInternalStatics();
-		//		new Exception().printStackTrace();
+		synchronized (shutdownHooks) {
+			for(Thread t: shutdownHooks)
+			{
+				Runtime.getRuntime().removeShutdownHook(t);
+			}
+			shutdownHooks.clear();
+		}
 		synchronized (classes) {
 			for (String s : properties.keySet()) {
 				//				System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
@@ -798,7 +828,7 @@ public class VirtualRuntime {
 					System.err.println("Skipping something null in reset!");
 					continue;
 				}
-				//					System.err.println("Calling reset on z " + c.getName());
+//									System.err.println("Calling reset on z " + c.getName());
 				//				if(!c.getName().contains("tomcat") && ! c.getName().contains("catalina") )
 				try {
 					//					Method m = c.getMethod(Constants.VMVM_STATIC_RESET_METHOD);
@@ -876,7 +906,7 @@ public class VirtualRuntime {
 		//				System.err.println("Running thread still up: " + t + "; cl: " + t.getContextClassLoader());
 		//			}
 		//		}
-		System.err.println("VR Classloader: " + Thread.currentThread().getContextClassLoader());
+//		System.err.println("VR Classloader: " + Thread.currentThread().getContextClassLoader());
 	}
 
 	public static class InternalStaticClass {

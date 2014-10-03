@@ -1,10 +1,10 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.AnnotationVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Handle;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
 
 public class InsnCountingMV extends MethodVisitor {
 
@@ -57,9 +57,9 @@ public class InsnCountingMV extends MethodVisitor {
 		super.visitLookupSwitchInsn(dflt, keys, labels);
 	}
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		count++;
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 	@Override
 	public void visitMultiANewArrayInsn(String desc, int dims) {

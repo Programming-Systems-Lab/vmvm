@@ -4,16 +4,16 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
-import org.objectweb.asm.tree.analysis.Analyzer;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicInterpreter;
-import org.objectweb.asm.tree.analysis.Frame;
-import org.objectweb.asm.tree.analysis.Interpreter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AbstractInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.TypeInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.Analyzer;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.AnalyzerException;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.BasicInterpreter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.Frame;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.analysis.Interpreter;
 
 public class IntializedTypeAnalyzer extends Analyzer {
 

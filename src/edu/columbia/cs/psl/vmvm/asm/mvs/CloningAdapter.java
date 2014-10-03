@@ -2,17 +2,17 @@ package edu.columbia.cs.psl.vmvm.asm.mvs;
 
 import java.util.HashSet;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
 
 
 public class CloningAdapter extends InstructionAdapter implements Opcodes {
 
 	public CloningAdapter(MethodVisitor mv) {
-		super(mv);
+		super(Opcodes.ASM5,mv);
 	}
 
 
@@ -56,12 +56,12 @@ public class CloningAdapter extends InstructionAdapter implements Opcodes {
 	public void println(String toPrint) {
 		visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
 		visitLdcInsn(toPrint + " : ");
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V");
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
 
 		visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getName", "()Ljava/lang/String;");
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getName", "()Ljava/lang/String;", false);
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
 	}
 
 	private void _generateClone(String typeOfField, String debug, boolean secondElHasArrayLen) {

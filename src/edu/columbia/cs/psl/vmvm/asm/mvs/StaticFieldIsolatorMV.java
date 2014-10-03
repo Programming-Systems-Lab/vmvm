@@ -2,14 +2,6 @@ package edu.columbia.cs.psl.vmvm.asm.mvs;
 
 import java.util.HashSet;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
@@ -18,6 +10,14 @@ import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.util.Printer;
 
 public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
@@ -63,7 +63,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 				MethodListClassNode superN = Instrumenter.instrumentedClasses.get(superz);
 //				if(cv.getClassName().contains("ClassImposterizer"))
 //				System.err.println(superN.name + " " + (superN.hasClinit ? "T" : "F"));
-				if (superN != null && superN.hasClinit) {
+				if (superN != null && superN.hasClinit && !Instrumenter.ignoredClasses.contains(superz)) {
 					checkAndReinit(superz);
 //					Label continu = new Label();
 //					super.visitFieldInsn(GETSTATIC, superz, Constants.VMVM_NEEDS_RESET, "Z");
@@ -84,9 +84,9 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 				super.visitLdcInsn(Type.getType("L" + classToRegister + ";"));
 			else {
 				super.visitLdcInsn(classToRegister.replace("/", "."));
-				super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+				super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
 			}
-			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V");
+			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "registerClInit", "(Ljava/lang/Class;)V", false);
 
 			if (CLINIT_ORDER_DEBUG) {
 				println("clinit  rerunning>" + cv.getClassName());
@@ -171,7 +171,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 	public void visitTypeInsn(int opcode, String type) {
 		String _type = type.replace("[", "");
 		MethodListClassNode cn = Instrumenter.instrumentedClasses.get(_type);
-		if (cn != null && cn.hasClinit && opcode == NEW) {
+		if (cn != null && cn.hasClinit && opcode == NEW && !Instrumenter.ignoredClasses.contains(type)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";
@@ -183,36 +183,36 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 	{
 		super.visitTypeInsn(NEW, "java/lang/Exception");
 		    super.visitInsn(DUP);
-		    super.visitMethodInsn(INVOKESPECIAL, "java/lang/Exception", "<init>", "()V");
-		    super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
+		    super.visitMethodInsn(INVOKESPECIAL, "java/lang/Exception", "<init>", "()V", false);
+		    super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false);
 	}
 	public void println(String toPrint) {
         super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         super.visitLdcInsn(toPrint + " : ");
         super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print",
-                "(Ljava/lang/String;)V");
+                "(Ljava/lang/String;)V", false);
 
         super.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread",
-                "()Ljava/lang/Thread;");
-        super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getName", "()Ljava/lang/String;");
+                "()Ljava/lang/Thread;", false);
+        super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getName", "()Ljava/lang/String;", false);
         super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println",
-                "(Ljava/lang/String;)V");
+                "(Ljava/lang/String;)V", false);
     }
 
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		MethodListClassNode cn = Instrumenter.getClassNodeWithMethod(owner, name, desc);
 		if (cn == null)
 			cn = Instrumenter.instrumentedClasses.get(owner);
 
-		if (cn != null && cn.hasClinit && opcode == INVOKESTATIC) {
+		if (cn != null && cn.hasClinit && opcode == INVOKESTATIC && !Instrumenter.ignoredClasses.contains(owner)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";
 			checkAndReinit(classToCheckReset);
 		}
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 
 	public void checkAndReinit(String clazz) {
@@ -227,10 +227,11 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 ////			return;
 //		}
 		
+		Label allDone = new Label();
 		if(JUnitResettingClassVisitor.shouldIgnoreClass(clazz))
 			return;
 		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); //Need to force to make sure that this is initialized before we can get a lock on it.
-		super.visitInsn(POP);
+		super.visitJumpInsn(IFEQ, allDone);
 		
 		Label continu = new Label();
 //			if(CLINIT_ORDER_DEBUG)
@@ -245,9 +246,9 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			super.visitLdcInsn(clazz.replace("/", "."));
 			super.visitInsn(ICONST_0);
 			super.visitLdcInsn(cv.getClassName().replace("/", "."));
-			super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
-			super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;");
-			super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
+			super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
+			super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+			super.visitMethodInsn(INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
 		}
 
 		super.visitInsn(DUP);
@@ -258,7 +259,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		super.visitJumpInsn(IFNULL, notInInit);
 		
 		super.visitFieldInsn(GETSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
-		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 		super.visitJumpInsn(IF_ACMPEQ, continu);
 		//If the Class object for C indicates that initialization is in progress for C by some other thread, then release LC and block the current thread until informed that the in-progress initialization has completed, at which time repeat this procedure.
 		//If the Class object for C indicates that initialization is in progress for C by the current thread, then this must be a recursive request for initialization. Release LC and complete normally
@@ -267,7 +268,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		{
 			println("clinit going to wait on "+clazz+" > in " + cv.getClassName());
 		}
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "wait", "()V");
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "wait", "()V", false);
 		if(CLINIT_ORDER_DEBUG)
 		{
 			println("clinit done waiting on "+clazz+" > in " + cv.getClassName());
@@ -279,7 +280,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		//Otherwise, record the fact that initialization of the Class object for C is in progress by the current thread, and release LC. Then, initialize each final static field of C with the constant value in its ConstantValue attribute (§4.7.2), in the order the fields appear in the ClassFile structure
 		super.visitInsn(ICONST_0);
 		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_NEEDS_RESET, "Z"); 
-		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+		super.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		super.visitInsn(DUP);
 		super.monitorexit();
@@ -287,14 +288,14 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 			println("Rerunning " + clazz +" from " + cv.getClassName());
 		if(clazz.endsWith("Enhancer"))
 			printStackTrace();
-		super.visitMethodInsn(INVOKESTATIC, clazz, Constants.VMVM_STATIC_RESET_METHOD, "()V");
+		super.visitMethodInsn(INVOKESTATIC, clazz, Constants.VMVM_STATIC_RESET_METHOD, "()V", false);
 		//If the execution of the class or interface initialization method completes normally, then acquire LC, label the Class object for C as fully initialized, notify all waiting threads, release LC, and complete this procedure normally.
 		super.visitInsn(DUP);
 		super.monitorenter();
 		super.visitInsn(ACONST_NULL);
 		super.visitFieldInsn(PUTSTATIC, clazz, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		super.visitInsn(DUP);
-		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "notifyAll", "()V");
+		super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "notifyAll", "()V", false);
 		if(CLINIT_ORDER_DEBUG)
 		{
 			println("clinit notified waiters on "+clazz+" > in " + cv.getClassName());
@@ -302,6 +303,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 
 		super.visitLabel(continu);
 		super.monitorexit();
+		super.visitLabel(allDone);
 	}
 	void magic() throws InterruptedException
 	{
@@ -317,7 +319,7 @@ public class StaticFieldIsolatorMV extends CloningAdapter implements Opcodes {
 		if (cn == null)
 			cn = Instrumenter.instrumentedClasses.get(owner);
 
-		if (cn != null && cn.hasClinit && (opcode == GETSTATIC || opcode == PUTSTATIC)) {
+		if (cn != null && cn.hasClinit && (opcode == GETSTATIC || opcode == PUTSTATIC) && !Instrumenter.ignoredClasses.contains(owner)) {
 			String classToCheckReset = cn.name;
 			if ((cn.access & Opcodes.ACC_INTERFACE) != 0)
 				classToCheckReset += "$vmvmReseter";

@@ -7,23 +7,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.AdviceAdapter;
-import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.LocalVariableNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import com.sun.media.jai.rmi.HashSetState;
 
 import edu.columbia.cs.psl.vmvm.Constants;
@@ -33,6 +16,22 @@ import edu.columbia.cs.psl.vmvm.asm.InterceptingClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.VMVMClassVisitor;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.MethodListClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.AnnotationVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.AdviceAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AbstractInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AnnotationNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.InsnList;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.LocalVariableNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
 import edu.columbia.cs.psl.vmvm.Virtualizer;
 import edu.columbia.cs.psl.vmvm.VMState;
 
@@ -56,7 +55,8 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 	public static HashMap<Integer, HashSet<EqFieldInsnNode>> staticFieldsToClone = new HashMap<>();
 	public SandboxPropogatingMV(int api, MethodVisitor mv, int access, String name, String desc, String className, InvivoAdapter lvs, VMVMClassVisitor interceptingClassVisitor, MethodNode newM) {
 		//		super(api,mv,access,name,desc);
-		super(mv);
+		super(Opcodes.ASM5,mv);
+
 		this.invivoAdapter = lvs;
 		this.className = className;
 		this.name = name;
@@ -101,7 +101,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 			if (invivoAdapter.isMain() || name.equals("<clinit>")) {
 				sandboxVar = invivoAdapter.newLocal(Type.getType(VMState.class));
 				invivoAdapter.setSandboxVar(sandboxVar);
-				super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "getVMState", "()" + Type.getDescriptor(VMState.class));
+				super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "getVMState", "()" + Type.getDescriptor(VMState.class), false);
 				invivoAdapter.setSandboxFlag();
 			}
 		} else {
@@ -121,7 +121,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 		concurrentVMs--;
 		super.visitVarInsn(ALOAD, vmStateVar);
 		super.visitInsn(DUP);
-		super.invokevirtual(Type.getInternalName(VMState.class), "deVM", "()V");
+		super.invokevirtual(Type.getInternalName(VMState.class), "deVM", "()V", false);
 		invivoAdapter.setSandboxFlag();
 		
 		int n = numVMsThisMethod - concurrentVMs;
@@ -190,7 +190,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 		super.visitFieldInsn(opcode, owner, name, desc);
 	}
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		boolean ignore = name.startsWith("_") && desc.contains(Type.getDescriptor(VMState.class));
 
 		owner = Instrumenter.remapInterface(owner);
@@ -203,7 +203,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 			invivoAdapter.cloneLocals(vmStateVar);
 
 
-			super.invokestatic(Type.getInternalName(VirtualRuntime.class), "setVMed", "()" + Type.getDescriptor(VMState.class));
+			super.invokestatic(Type.getInternalName(VirtualRuntime.class), "setVMed", "()" + Type.getDescriptor(VMState.class), false);
 			super.visitInsn(DUP);
 			super.visitVarInsn(ASTORE, vmStateVar);
 
@@ -211,13 +211,13 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 
 			invivoAdapter.getSandboxFlag();
 //			System.out.println("cloneStatics_"+this.name+getCaptureMethodName(this.name, this.desc)+"_"+numVMsThisMethod);
-			super.invokestatic(this.className, "cloneStatics_"+this.name.replace("<", "").replace(">", "")+getCaptureMethodName(this.name, this.desc)+"_"+numVMsThisMethod, "(I)V");
+			super.invokestatic(this.className, "cloneStatics_"+this.name.replace("<", "").replace(">", "")+getCaptureMethodName(this.name, this.desc)+"_"+numVMsThisMethod, "(I)V", false);
 			return;
 		} else if (owner.equals(Type.getInternalName(Virtualizer.class)) && name.equals("exitVM")) {
 			exitVM();
 			return;
 		} else if (opcode == INVOKESPECIAL && owner.equals(Type.getInternalName(Thread.class)) && name.equals("<init>")) {
-			super.visitMethodInsn(opcode, owner, name, desc);
+			super.visitMethodInsn(opcode, owner, name, desc, itfc);
 			if(Instrumenter.atLeastASuperEq(this.className, "java/lang/Thread",0) && this.name.equals("<init>")) //It's a super call
 			{
 				super.visitVarInsn(ALOAD, 0);
@@ -226,8 +226,8 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 			{
 				super.visitInsn(DUP);
 			}
-			super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Thread.class), "getId", "()J");
-			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "setVMed", "(J)V");
+			super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(Thread.class), "getId", "()J", false);
+			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "setVMed", "(J)V", false);
 
 			return;
 		}
@@ -280,7 +280,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 			//				}
 		}
 
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 
 		if (this.name.equals("<init>") && !superInit && opcode == INVOKESPECIAL)
 			onMethodEnter();
@@ -295,7 +295,7 @@ public class SandboxPropogatingMV extends InstructionAdapter implements Opcodes 
 				coveringMN.visibleAnnotations.add(an);
 			else
 				coveringMN.invisibleAnnotations.add(an);
-		return new AnnotationVisitor(Opcodes.ASM4) {
+		return new AnnotationVisitor(Opcodes.ASM5) {
 			@Override
 			public void visit(String name, Object value) {
 				an.visit(name, value);

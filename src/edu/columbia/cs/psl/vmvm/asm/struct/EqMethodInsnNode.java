@@ -1,23 +1,23 @@
 package edu.columbia.cs.psl.vmvm.asm.struct;
 
-import org.objectweb.asm.tree.MethodInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
 
 public class EqMethodInsnNode extends MethodInsnNode {
 	public EqMethodInsnNode(
 	        final int opcode,
 	        final String owner,
 	        final String name,
-	        final String desc)
+	        final String desc, boolean itfc)
 	    {
-	        super(opcode,owner,name,desc);
+	        super(opcode,owner,name,desc, itfc);
 	    }
 	public EqMethodInsnNode(
 	        final int opcode,
 	        final String owner,
 	        final String name,
-	        final String desc, int flag)
+	        final String desc, int flag, boolean itfc)
 	    {
-	        super(opcode,owner,name,desc);
+	        super(opcode,owner,name,desc, itfc);
 	        this.flag = flag;
 	    }
 	public static final int FLAG_SUPER_INVOKE_CHROOT = 1;

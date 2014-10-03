@@ -3,15 +3,14 @@ package edu.columbia.cs.psl.vmvm.asm.mvs;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-import org.objectweb.asm.tree.ClassNode;
-
 import edu.columbia.cs.psl.vmvm.Instrumenter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.InstructionAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
 
 public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implements Opcodes{
 
@@ -20,7 +19,7 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 	private String owner;
 	private LocalVariablesSorter lvs;
 	public ClassDefineInterceptMethodVisitor(MethodVisitor mv,String owner,String name,String desc) {
-		super(mv);
+		super(Opcodes.ASM5,mv);
 		this.owner = owner;
 		this.name = name;
 		this.desc = desc;
@@ -74,13 +73,13 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 			mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
 			mv.visitInsn(DUP);
 			mv.visitLdcInsn("file://");
-			mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "(Ljava/lang/String;)V");
+			mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "(Ljava/lang/String;)V", false);
 			mv.visitLdcInsn("VMVMLib");
-			mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;");
-			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
-			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
-			mv.visitMethodInsn(INVOKESPECIAL, "java/net/URL", "<init>", "(Ljava/lang/String;)V");
-			mv.visitMethodInsn(INVOKEVIRTUAL, this.owner, "addURL", "(Ljava/net/URL;)V");
+			mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+			mv.visitMethodInsn(INVOKESPECIAL, "java/net/URL", "<init>", "(Ljava/lang/String;)V", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, this.owner, "addURL", "(Ljava/net/URL;)V", false);
 			
 			
 			mv.visitVarInsn(ALOAD, 0);
@@ -89,13 +88,13 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 			mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
 			mv.visitInsn(DUP);
 			mv.visitLdcInsn("file://");
-			mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "(Ljava/lang/String;)V");
+			mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "(Ljava/lang/String;)V", false);
 			mv.visitLdcInsn("ASMLib");
-			mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;");
-			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
-			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;");
-			mv.visitMethodInsn(INVOKESPECIAL, "java/net/URL", "<init>", "(Ljava/lang/String;)V");
-			mv.visitMethodInsn(INVOKEVIRTUAL, this.owner, "addURL", "(Ljava/net/URL;)V");
+			mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "getProperty", "(Ljava/lang/String;)Ljava/lang/String;", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+			mv.visitMethodInsn(INVOKESPECIAL, "java/net/URL", "<init>", "(Ljava/lang/String;)V", false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, this.owner, "addURL", "(Ljava/net/URL;)V", false);
 
 			mv.visitLabel(l1);
 			Label l3 = new Label();
@@ -105,7 +104,7 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 			int n = lvs.newLocal(Type.getType(Exception.class));
 			mv.visitVarInsn(ASTORE, n);
 			mv.visitVarInsn(ALOAD, n);
-			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V", false);
 			mv.visitLabel(l3);
 			mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
 
@@ -113,7 +112,7 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 	}
 	private boolean superInit = false;
 	@Override
-	public void visitMethodInsn(int opcode, String owner, String name, String desc) {
+	public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itfc) {
 		//XXX todo this was buggy so now it's off. is that a problem?
 //		if(name.equals("defineClass") && !this.owner.equals("java/lang/ClassLoader") && Instrumenter.atLeastASuperEq(owner, "java/lang/ClassLoader",0))
 //		{
@@ -128,7 +127,7 @@ public class ClassDefineInterceptMethodVisitor extends InstructionAdapter implem
 //			opcode = INVOKESTATIC;
 //		}
 //		else
-			super.visitMethodInsn(opcode, owner, name, desc);
+			super.visitMethodInsn(opcode, owner, name, desc, itfc);
 			
 //		if (this.name.equals("<init>") && !superInit && opcode == INVOKESPECIAL)
 //			onMethodEnter();

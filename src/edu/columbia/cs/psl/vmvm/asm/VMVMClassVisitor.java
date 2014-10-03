@@ -8,17 +8,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VMState;
@@ -31,6 +20,16 @@ import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.chroot.ChrootUtils;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AnnotationNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
 import edu.columbia.cs.psl.vmvm.struct.MutableInstance;
 
 public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, Constants  {
@@ -191,7 +190,7 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 				{
 					gmv.visitTypeInsn(NEW, Type.getInternalName(MutableInstance.class));
 					gmv.visitInsn(DUP);
-					gmv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(MutableInstance.class), "<init>", "()V");
+					gmv.visitMethodInsn(INVOKESPECIAL, Type.getInternalName(MutableInstance.class), "<init>", "()V", false);
 					gmv.visitFieldInsn(PUTSTATIC, className, fn.name, Type.getDescriptor(MutableInstance.class));
 				}
 			}
@@ -217,9 +216,9 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 //				mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Exception", "printStackTrace", "()V");
 //				gmv.visitLabel(l3);
 //			}
-			gmv.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;");
+			gmv.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 			gmv.visitFieldInsn(PUTSTATIC, classWithResetMethod, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
-			gmv.visitMethodInsn(INVOKESTATIC, classWithResetMethod, Constants.VMVM_STATIC_RESET_METHOD, "()V");			
+			gmv.visitMethodInsn(INVOKESTATIC, classWithResetMethod, Constants.VMVM_STATIC_RESET_METHOD, "()V", false);			
 			gmv.visitInsn(ACONST_NULL);
 			gmv.visitFieldInsn(PUTSTATIC, classWithResetMethod, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		}
@@ -395,7 +394,7 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 						if(useVMState)
 							gmv.loadArg(args.length - 1);
 						gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafePath", "(Ljava/lang/String;" + (useVMState ? Type.getDescriptor(VMState.class) :"")
-								+ ")Ljava/lang/String;");
+								+ ")Ljava/lang/String;", false);
 					}
 					gmv.visitInsn(AASTORE);
 				}
@@ -406,13 +405,13 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 				for (int i = 0; i < args.length; i++)
 					gmv.loadArg(i);
 
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURIArrayReturn", captureDesc);
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURIArrayReturn", captureDesc, false);
 			} else if (data.equals("URL")) {
 				Type[] args = Type.getArgumentTypes(captureDesc);
 				for (int i = 0; i < args.length; i++)
 					gmv.loadArg(i);
 
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURLArrayReturn", captureDesc);
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURLArrayReturn", captureDesc, false);
 
 			} else if (data.equals("FS")) {
 				System.out.println("Warn: app uses " + m.owner+"."+m.name + m.desc);
@@ -464,7 +463,7 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 						if(useVMState)
 							gmv.loadArg(args.length - 1);
 						gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafePath", "(Ljava/lang/String;" + (useVMState ? Type.getDescriptor(VMState.class) :"")
-								+ ")Ljava/lang/String;");
+								+ ")Ljava/lang/String;", false);
 					}
 
 				}
@@ -473,20 +472,20 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 					UnconditionalChrootMethodVisitor.sandboxCallToFSOutputMethod(gmv, m.getOpcode(), m.owner, m.name, m.desc);
 				}
 				else
-					gmv.visitMethodInsn(m.getOpcode(), m.owner, m.name, m.desc);
+					gmv.visitMethodInsn(m.getOpcode(), m.owner, m.name, m.desc, false);
 
 			} else if (data.equals("URI")) {
 				Type[] args = Type.getArgumentTypes(captureDesc);
 				for (int i = 0; i < args.length; i++)
 					gmv.loadArg(i);
 
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURI", captureDesc);
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURI", captureDesc, false);
 			} else if (data.equals("URL")) {
 				Type[] args = Type.getArgumentTypes(captureDesc);
 				for (int i = 0; i < args.length; i++)
 					gmv.loadArg(i);
 
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURL", captureDesc);
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ChrootUtils.class), "ensureSafeURL", captureDesc, false);
 
 			} else if (data.equals("FS")) {
 
@@ -528,9 +527,9 @@ public abstract class VMVMClassVisitor extends ClassVisitor implements Opcodes, 
 				for (int i = 0; i < args.length; i++) {
 					gmv.loadArg(i);
 				}
-				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "getVMState", "()" + Type.getDescriptor(VMState.class));
+				gmv.visitMethodInsn(INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "getVMState", "()" + Type.getDescriptor(VMState.class), false);
 				gmv.visitMethodInsn((m.access & Opcodes.ACC_STATIC) != 0 ? Opcodes.INVOKESTATIC : m.name.equals("<init>") ? Opcodes.INVOKESPECIAL : Opcodes.INVOKEVIRTUAL, className,
-						(!"<init>".equals(renamedMethodsToCover.get(m).name) && !"<clinit>".equals(renamedMethodsToCover.get(m).name) ? "_" : "") + renamedMethodsToCover.get(m).name, renamedMethodsToCover.get(m).desc);
+						(!"<init>".equals(renamedMethodsToCover.get(m).name) && !"<clinit>".equals(renamedMethodsToCover.get(m).name) ? "_" : "") + renamedMethodsToCover.get(m).name, renamedMethodsToCover.get(m).desc, false);
 
 				gmv.returnValue();
 			}

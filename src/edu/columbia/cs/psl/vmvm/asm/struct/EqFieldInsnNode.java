@@ -1,6 +1,6 @@
 package edu.columbia.cs.psl.vmvm.asm.struct;
 
-import org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
 
 public class EqFieldInsnNode extends FieldInsnNode {
 

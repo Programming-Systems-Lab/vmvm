@@ -3,8 +3,6 @@ Created-By: 1.6.0_06 (Sun Microsystems Inc.)
 Main-Class: edu.columbia.cs.psl.vmvm.Instrumenter
 X-Comment: Premain-Class: edu.columbia.cs.psl.vmvm.agent.Premain
 X-Comment: Agent-Class: edu.columbia.cs.psl.vmvm.agent.Premain
-Boot-Class-Path: lib/asm-all-4.1.jar
 X-Comment: Can-Redefine-Classes: true
 X-Comment: Can-Retransform-Classes: true
-Class-Path: ./:lib/asm-all-4.1.jar
 

@@ -3,8 +3,8 @@ package edu.columbia.cs.psl.vmvm;
 import java.net.URLClassLoader;
 import java.util.logging.Logger;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassReader;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
 
 public class InstrumenterClassWriter extends ClassWriter {
 	private static Logger logger = Logger.getLogger("edu.columbia.cs.psl.vmvm.InstrumenterClassWriter");

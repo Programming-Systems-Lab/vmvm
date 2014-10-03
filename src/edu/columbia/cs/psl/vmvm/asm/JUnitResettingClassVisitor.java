@@ -5,22 +5,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.JSRInlinerAdapter;
-import org.objectweb.asm.commons.LocalVariablesSorter;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.Instrumenter;
 import edu.columbia.cs.psl.vmvm.VMState;
@@ -42,6 +26,21 @@ import edu.columbia.cs.psl.vmvm.asm.struct.EqFieldInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodInsnNode;
 import edu.columbia.cs.psl.vmvm.asm.struct.EqMethodNode;
 import edu.columbia.cs.psl.vmvm.chroot.ChrootUtils;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.AnnotationVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.ClassWriter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.FieldVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Label;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.JSRInlinerAdapter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.LocalVariablesSorter;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.AnnotationNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.ClassNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.FieldInsnNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
 import edu.columbia.cs.psl.vmvm.struct.MutableInstance;
 
 public class JUnitResettingClassVisitor extends VMVMClassVisitor {
@@ -57,7 +56,7 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 	private boolean generateVMVMInterface = false;
 
 	public JUnitResettingClassVisitor(ClassVisitor cv, ClassNode thisClassInfo, boolean generateVMVMInterface) {
-		super(Opcodes.ASM4, cv,false);
+		super(Opcodes.ASM5, cv,false);
 		this.thisClassInfo = thisClassInfo;
 	}
 
@@ -108,6 +107,7 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 				|| name.startsWith("net/sf/antcontrib")
 				|| name.startsWith("org/apache/tomcat/util/buf/B2CConverter")
 				|| name.startsWith("org/apache/ivy/plugins/lock/DeleteOnExitHook")
+				|| name.startsWith("org/apache/hadoop/io/Text")
 				;
 	}
 
@@ -177,13 +177,18 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 			}
 			MethodVisitor fmv = cv.visitMethod(acc, name, desc, signature, exceptions);
 			fmv = new JSRInlinerAdapter(fmv, acc, name, desc, signature, exceptions);
-
+			MethodVisitorFactory addOn = null;
+			if(Instrumenter.methodVisitorFactory != null)
+			{
+				addOn = Instrumenter.methodVisitorFactory.newInstance();
+				fmv = addOn.getMethodVisitor(fmv,acc, name, desc, signature, exceptions);
+			}
 			ClassDefineInterceptMethodVisitor dynMV = new ClassDefineInterceptMethodVisitor(fmv, className, name, desc);
 //			UnconditionalChrootMethodVisitor chrooter = new UnconditionalChrootMethodVisitor(Opcodes.ASM4, dynMV, acc, name, desc, className , this);
-			SystemPropertyLogger propLogger = new SystemPropertyLogger(Opcodes.ASM4,dynMV,acc,name,desc);
+			SystemPropertyLogger propLogger = new SystemPropertyLogger(Opcodes.ASM5,dynMV,acc,name,desc);
 			StaticFinalMutibleizer mutableizer = new StaticFinalMutibleizer(propLogger, acc, className, name, desc);
 			StaticFieldIsolatorMV staticMV = new StaticFieldIsolatorMV(mutableizer, acc, name, desc, this, Instrumenter.getMethodNode(this.className, name, desc));
-			ReflectionHackMV reflectionHack = new ReflectionHackMV(Opcodes.ASM4, staticMV,this);
+			ReflectionHackMV reflectionHack = new ReflectionHackMV(Opcodes.ASM5, staticMV,this);
 
 			JUnitRunnerMV jumv = new JUnitRunnerMV(reflectionHack, acc, name, desc, this.className);
 			//			LazyCloneInterceptingMethodVisitor cloningIMV = new LazyCloneInterceptingMethodVisitor(Opcodes.ASM4, mv, acc, name, desc);
@@ -193,7 +198,9 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 			TypeRememberingLocalVariableSorter lvs2 = new TypeRememberingLocalVariableSorter(acc, desc, jumv);
 			staticMV.setLvs(lvs2);
 			dynMV.setLocalVariableSorter(lvs2);
-			InsnCountingMV counter = new InsnCountingMV(Opcodes.ASM4, lvs2);
+			if(addOn != null)
+				addOn.addLocalVaribleSorter(lvs2);
+			InsnCountingMV counter = new InsnCountingMV(Opcodes.ASM5, lvs2);
 			staticMV.setCounter(counter);
 			return counter;
 		} else
@@ -238,7 +245,7 @@ public class JUnitResettingClassVisitor extends VMVMClassVisitor {
 
 	private void generateReInitCheckMethod() {
 		MethodVisitor mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD_WITH_CHECK, "()V", null, null);
-		StaticFieldIsolatorMV smv = new StaticFieldIsolatorMV(mv, Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD_WITH_CHECK, "()V", this, new EqMethodNode(Opcodes.ASM4, Constants.VMVM_STATIC_RESET_METHOD_WITH_CHECK, "()V", this.className, null, null));
+		StaticFieldIsolatorMV smv = new StaticFieldIsolatorMV(mv, Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, Constants.VMVM_STATIC_RESET_METHOD_WITH_CHECK, "()V", this, new EqMethodNode(Opcodes.ASM5, Constants.VMVM_STATIC_RESET_METHOD_WITH_CHECK, "()V", this.className, null, null));
 		smv.visitCode();
 		smv.checkAndReinit(this.className);
 		smv.visitInsn(RETURN);

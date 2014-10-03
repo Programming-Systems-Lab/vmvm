@@ -6,7 +6,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 
-import org.objectweb.asm.tree.MethodNode;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodNode;
 
 public class EqMethodNode extends MethodNode implements Serializable {
 
@@ -24,7 +25,7 @@ public class EqMethodNode extends MethodNode implements Serializable {
 	private static final long serialVersionUID = -3345910259321149535L;
 
 	public EqMethodNode(int access, String name, String desc, String owner, String signature, String[] exceptions) {
-		super(access, name, desc, signature, exceptions);
+		super(Opcodes.ASM5, access, name, desc, signature, exceptions);
 		this.owner = owner;
 		// TODO Auto-generated constructor stub
 	}

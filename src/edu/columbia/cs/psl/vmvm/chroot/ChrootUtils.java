@@ -27,10 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.WeakHashMap;
 
-import org.objectweb.asm.tree.MethodInsnNode;
-
 import edu.columbia.cs.psl.vmvm.Constants;
 import edu.columbia.cs.psl.vmvm.VMState;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.tree.MethodInsnNode;
 
 public class ChrootUtils {
 	

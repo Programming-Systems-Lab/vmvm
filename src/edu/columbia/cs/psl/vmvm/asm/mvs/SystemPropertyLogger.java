@@ -1,19 +1,12 @@
 package edu.columbia.cs.psl.vmvm.asm.mvs;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
-
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.GeneratorAdapter;
-import org.objectweb.asm.commons.InstructionAdapter;
 
 import edu.columbia.cs.psl.vmvm.VirtualRuntime;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.MethodVisitor;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Opcodes;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.Type;
+import edu.columbia.cs.psl.vmvm.org.objectweb.asm.commons.GeneratorAdapter;
 
 public class SystemPropertyLogger extends GeneratorAdapter {
 
@@ -99,8 +92,13 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 	}
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name,
-			String desc) {
-
+			String desc, boolean itfc) {
+		if(owner.equals(Type.getInternalName(Runtime.class)) && name.equals("addShutdownHook"))
+		{
+			owner = Type.getInternalName(VirtualRuntime.class);
+			desc = "("+Type.getDescriptor(Runtime.class)+Type.getDescriptor(Thread.class)+")V";
+			opcode = Opcodes.INVOKESTATIC;
+		}
 		if((owner.equals("java/lang/System") && name.equals("setProperty") && desc.equals("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"))
 				|| (owner.equals("java/lang/System") && name.equals("setProperties") && desc.equals("(Ljava/util/Properties;)V")))
 		{
@@ -117,20 +115,24 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 				String newName = name.replace("set", "get");
 				if(owner.equals("javax/swing/JDialog") || owner.equals("javax/swing/JFrame"))
 					newName = name.replace("set", "is");
-				if(owner.equals("java/lang/System") && (name.equals("setOut") || name.equals("setErr")))
+				if(owner.equals("java/lang/System") && (name.equals("setOut") || name.equals("setErr") || name.equals("setIn")))
 				{				
 					super.visitFieldInsn(Opcodes.GETSTATIC, owner, name.replace("set", "").toLowerCase(), args[0].getDescriptor());
 				}
+				else if(owner.equals("java/net/Authenticator") && name.equals("setDefault"))
+				{
+					super.visitInsn(Opcodes.ACONST_NULL);
+				}
 				else
 				{
-					super.visitMethodInsn(opcode, owner, newName, Type.getMethodDescriptor(args[0]));
+					super.visitMethodInsn(opcode, owner, newName, Type.getMethodDescriptor(args[0]), false);
 					box(args[0]);
 				}
 				//Do the log
 				//box if necessary
 				super.visitIntInsn(Opcodes.BIPUSH, clazz.setMethods.get(name));
 
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternal", "(Ljava/lang/Object;I)V");
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternal", "(Ljava/lang/Object;I)V", false);
 			}
 			else if(clazz.addMethods.containsKey(name))
 			{
@@ -140,7 +142,7 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 				box(args[0]);
 				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
 
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalAdd", "(Ljava/lang/Object;I)V");
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalAdd", "(Ljava/lang/Object;I)V", false);
 			}
 			else if(clazz.removeMethods.containsKey(name))
 			{
@@ -148,12 +150,11 @@ public class SystemPropertyLogger extends GeneratorAdapter {
 				//Do the log
 				//box if necessary
 				box(args[0]);
-				super.visitIntInsn(Opcodes.BIPUSH, clazz.addMethods.get(name));
-
-				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalRemove", "(Ljava/lang/Object;I)V");
+				super.visitIntInsn(Opcodes.BIPUSH, clazz.removeMethods.get(name));
+				super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(VirtualRuntime.class), "logStaticInternalRemove", "(Ljava/lang/Object;I)V", false);
 			}
 		}
-		super.visitMethodInsn(opcode, owner, name, desc);
+		super.visitMethodInsn(opcode, owner, name, desc, itfc);
 	}
 
 	
