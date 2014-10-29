@@ -1082,9 +1082,12 @@ public class Instrumenter {
 				processDirectory(fi, thisOutputDir, false);
 			else if (fi.getName().endsWith(".class") && !fi.getName().endsWith("package-info.class"))
 				try {
-					processClass(fi.getName(), new FileInputStream(fi), thisOutputDir);
+					FileInputStream fis = new FileInputStream(fi);
+					processClass(fi.getName(), fis , thisOutputDir);
+					fis.close();
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			else if (fi.getName().endsWith(".jar"))
@@ -1366,7 +1369,9 @@ public class Instrumenter {
 							try{
 							JarEntry outEntry = new JarEntry(e.getName());
 							jos.putNextEntry(outEntry);
-							InstrumentResult clazz = instrumentClass(f.getAbsolutePath(),jar.getInputStream(e), true);
+							InputStream _is = jar.getInputStream(e);
+							InstrumentResult clazz = instrumentClass(f.getAbsolutePath(),_is, true);
+							_is.close();
 							if (clazz == null || clazz.clazz == null) {
 								System.out.println("Failed to instrument " + e.getName() + " in " + f.getName());
 								InputStream is = jar.getInputStream(e);
@@ -1377,6 +1382,7 @@ public class Instrumenter {
 										break;
 									jos.write(buffer, 0, count);
 								}
+								is.close();
 							} else
 							{
 								jos.write(clazz.clazz);
@@ -1527,7 +1533,9 @@ public class Instrumenter {
 							ZipEntry outEntry = new ZipEntry(e.getName());
 							zos.putNextEntry(outEntry);
 
-							InstrumentResult clazz = instrumentClass(f.getAbsolutePath(),zip.getInputStream(e), true);
+							InputStream _is=zip.getInputStream(e);
+							InstrumentResult clazz = instrumentClass(f.getAbsolutePath(),_is, true);
+							_is.close();
 							if (clazz == null || clazz.clazz != null) {
 								InputStream is = zip.getInputStream(e);
 								byte[] buffer = new byte[1024];
@@ -1537,6 +1545,7 @@ public class Instrumenter {
 										break;
 									zos.write(buffer, 0, count);
 								}
+								is.close();
 							} else
 								zos.write(clazz.clazz);
 							zos.closeEntry();

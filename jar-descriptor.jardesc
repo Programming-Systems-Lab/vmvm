@@ -13,7 +13,6 @@
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.xml"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm"/>
-        <javaElement handleIdentifier="=VMVM/src&lt;org"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.chroot"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.org.objectweb.asm.signature"/>
         <javaElement handleIdentifier="=VMVM/src&lt;edu.columbia.cs.psl.vmvm.asm.struct"/>
