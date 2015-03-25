@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/asm-all-4.0.jar" sourcepath="lib/asm-src.zip"/>
-	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/VMVM"/>
-	<classpathentry kind="output" path="bin"/>
-</classpath>

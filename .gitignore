@@ -3,3 +3,9 @@ framework/bin
 *.log
 /bin
 experiments/
+**/target
+
+# Eclipse files
+**/.settings/
+**/.project
+**/.classpath
