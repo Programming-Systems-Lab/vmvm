@@ -108,7 +108,7 @@
 
 	<modules>
 		<module>vmvm</module>
-		<module>ant-junit-formatter-vmvm</module>
+		<module>vmvm-ant-junit-formatter</module>
 		<module>vmvm-internal-static-detector</module>
 	</modules>
 
