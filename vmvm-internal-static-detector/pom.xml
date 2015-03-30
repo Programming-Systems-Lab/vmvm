@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<parent>
+		<groupId>edu.columbia.cs.psl.vmvm</groupId>
+		<artifactId>vmvm-base-pom</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>vmvm-internal-static-detector</artifactId>
+	<packaging>jar</packaging>
+	<name>${project.groupId}::${project.artifactId}</name>
+
+	<properties>		
+		<license.header.file>${project.basedir}/../LICENSE.md</license.header.file>
+	</properties>
+
+	<dependencies>
+		
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>vmvm</artifactId>
+		</dependency>
+
+		<dependency>
+		    <groupId>log4j</groupId>
+		    <artifactId>log4j</artifactId>		    
+		</dependency>
+		
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+		</dependency>
+
+	</dependencies>
+
+</project>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>edu.columbia.cs.psl.vmvm</groupId>
+	<artifactId>vmvm-base-pom</artifactId>
+	<name>${project.groupId}::${project.artifactId}</name>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<description>
+        Unit Test Virtualization for Java(tm)
+    </description>
+
+	<licenses>
+		<license>
+			<name>MIT license</name>
+			<url>http://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>scm:git:git://github.com/Programming-Systems-Lab/vmvm.git</connection>
+		<developerConnection>scm:git:git@github.com:Programming-Systems-Lab/vmvm.git</developerConnection>
+		<url>https://github.com/Programming-Systems-Lab/vmvm</url>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.source.version>1.7</java.source.version>
+		<java.target.version>${java.source.version}</java.target.version>
+		<java.source.line.length>150</java.source.line.length>
+
+		<license.header.file>${project.basedir}/LICENSE.md</license.header.file>
+		<junit.version>4.11</junit.version>
+		<ant.version>1.7.0</ant.version>
+		<ant.junit.version>1.9.4</ant.junit.version>
+		<mysql.connector.java.version>5.1.34</mysql.connector.java.version>
+		<log4j.version>1.2.16</log4j.version>
+		<asm.all.version>4.0</asm.all.version>
+	</properties>
+
+	<dependencyManagement>
+
+		<dependencies>
+
+			<!-- VMVM libraries -->
+			<dependency>
+				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<artifactId>vmvm</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<artifactId>vmvm-ant-junit-formatter</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<artifactId>vmvm-internal-static-detector</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Third libraries -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>ant</groupId>
+				<artifactId>ant</artifactId>
+				<version>${ant.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.ant</groupId>
+				<artifactId>ant-junit</artifactId>
+				<version>${ant.junit.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>${mysql.connector.java.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.ow2.asm</groupId>
+				<artifactId>asm-all</artifactId>
+				<version>${asm.all.version}</version>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<modules>
+		<module>vmvm</module>
+		<module>vmvm-ant-junit-formatter</module>
+		<module>vmvm-internal-static-detector</module>
+	</modules>
+
+	<build>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.6</version>
+					<configuration>
+						<archive>
+							<manifest>
+								<addClasspath>true</addClasspath>
+								<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							</manifest>
+						</archive>
+					</configuration>
+					<executions>
+						<execution>
+							<id>jar</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<inherited>true</inherited>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<inherited>true</inherited>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<source>${java.source.version}</source>
+					<target>${java.target.version}</target>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
+					<lineLength>${java.source.line.length}</lineLength>
+					<verbose>false</verbose>
+					<XaddSerialVersionUID>true</XaddSerialVersionUID>
+					<compilerArgument>-Xlint:all</compilerArgument>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<inherited>true</inherited>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<id>jar</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.4</version>
+				<inherited>true</inherited>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.2</version>
+				<inherited>true</inherited>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

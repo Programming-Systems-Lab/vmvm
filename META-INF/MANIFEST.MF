@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Created-By: 1.6.0_06 (Sun Microsystems Inc.)
-Main-Class: edu.columbia.cs.psl.vmvm.Instrumenter
-X-Comment: Premain-Class: edu.columbia.cs.psl.vmvm.agent.Premain
-X-Comment: Agent-Class: edu.columbia.cs.psl.vmvm.agent.Premain
-X-Comment: Can-Redefine-Classes: true
-X-Comment: Can-Retransform-Classes: true
-

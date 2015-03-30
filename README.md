@@ -20,9 +20,9 @@ To automatically have VMVM be called by ant, modify the `junit` task of your `bu
 
 ```xml
 <classpath>
-<pathelement path="ant-mvn-formatter.jar" />
-<pathelement location="vmvm.jar"/>
-<pathelement location="gen/"/>
+    <pathelement path="ant-mvn-formatter.jar" />
+    <pathelement location="vmvm.jar"/>
+    <pathelement location="gen/"/>
 </classpath>
 <formatter classname="edu.columbia.cs.psl.vmvm.AntJUnitTestListener" extension=".xml"/>
 <jvmarg value="-Xbootclasspath/a:vmvm.jar"/>
@@ -35,53 +35,57 @@ That's it. You may also need to include the vmvm.jar in the ant master classpath
 To automatically have VMVM be called by mvn, modify the `pom.xml` file for your project as follows:
 
 1.	Make sure that you are using a recent version of the surefire plugin (e.g., 2.15)
-1.	Add the [vmvm.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/vmvm.jar) and [ant-mvn-formatter.jar](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/ant-mvn-formatter.jar) to the surefire additional classpath (e.g. within the plugin configuration for surefire add):
+2.  Declare the VMVM dependencies:
 
 ```xml
-<additionalClasspathElements>
-<additionalClasspathElement>vmvm.jar</additionalClasspathElement>
-<additionalClasspathElement>ant-mvn-formatter.jar</additionalClasspathElement>
-<additionalClasspathElement>gen/</additionalClasspathElement>
-</additionalClasspathElements>
+  <dependency>
+  	 <groupId>edu.columbia.cs.psl.vmvm</groupId>
+  	 <artifactId>vmvm</artifactId>
+  	 <version>1.0.0-SNAPSHOT</version>
+  	 <scope>test</scope>
+  </dependency>
+  <dependency>
+  	 <groupId>edu.columbia.cs.psl.vmvm</groupId>
+  	 <artifactId>vmvm-ant-junit-formatter</artifactId>
+  	 <version>1.0.0-SNAPSHOT</version>
+  	 <scope>test</scope>
+  </dependency>
 ```
 
 3.	Register the VMVM test listener with surefire. If you don't have any other properties set for the surefire plugin, then that would look like this:
 
 ```xml
 <properties>
-<property>
-<name>listener</name>
-<value>edu.columbia.cs.psl.vmvm.MvnVMVMListener</value>
-</property>
+   <property>
+      <name>listener</name>
+      <value>edu.columbia.cs.psl.vmvm.MvnVMVMListener</value>
+   </property>
 </properties>
 ```
 
-Here's an example of a complete pom.xml block declaring the surefire plugin and registering VMVM with it:
+Here's an example of a mininal `pom.xml` block declaring the Maven Surefire plugin using the VMVM with it:
+
 ```xml
 <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-surefire-plugin</artifactId>
-	<version>2.16</version>
+	<version>2.18.1</version>
 	<configuration>
-		<additionalClasspathElements>
-		<additionalClasspathElement>vmvm.jar</additionalClasspathElement>
-		<additionalClasspathElement>ant-mvn-formatter.jar</additionalClasspathElement>
-	</additionalClasspathElements>
 		<properties>
-		<property>
-			<name>listener</name>
-			<value>edu.columbia.cs.psl.vmvm.MvnVMVMListener</value>
-		</property>
+			<property>
+				<name>listener</name>
+				<value>edu.columbia.cs.psl.vmvm.MvnVMVMListener</value>
+			</property>
 		</properties>
-	</configuration>
+	</configuration>				
 	<executions>
 		<execution>
-		<id>plain</id>
-		<configuration>
-			<includes>
-				<include>**/*Test.java</include>
-			</includes>
-		</configuration>
+			<id>plain</id>
+			<configuration>
+				<includes>
+					<include>**/*Test.java</include>
+				</includes>
+			</configuration>
 		</execution>
 	</executions>
 </plugin>
