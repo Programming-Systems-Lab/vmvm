@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Created-By: 1.6.0_06 (Sun Microsystems Inc.)
-Premain-Class: edu.columbia.cs.psl.vmvm.runtime.PreMain
-
