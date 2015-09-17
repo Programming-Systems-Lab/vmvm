@@ -1,0 +1,7 @@
+debug
+dependency-reduced-pom.xml
+.classpath
+.settings
+.project
+target
+.cproject
