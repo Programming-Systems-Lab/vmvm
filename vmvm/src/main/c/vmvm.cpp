@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <string.h>
 #include "jvmti.h"
+#include <time.h>
+
 #include "jni.h"
 #include "java_crw_demo.h"
 
@@ -173,7 +175,6 @@ static void updateClassCache(JNIEnv *env) {
 							"Ledu/columbia/cs/psl/vmvm/runtime/VMVMInstrumented;")
 							== 0) {
 						//This interface has been instrumented;
-						gdata->jvmti->Deallocate((unsigned char*) (void*) sig);
 						int nameLen = strlen(c->name);
 						char * newClass = new char[nameLen + 14];
 						strcat(newClass, (c->name + 1));
@@ -359,7 +360,6 @@ JNIEXPORT static void JNICALL markAllClassesForReinit(JNIEnv *env,
 		return;
 	}
 	updateClassCache(env);
-
 }
 JNIEXPORT static void JNICALL reinitCalled(JNIEnv *env, jclass klass,
 		jclass tgt) {
