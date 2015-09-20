@@ -11,12 +11,15 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCapabilityCV;
 
 public class VMVMClassFileTransformer implements ClassFileTransformer {
 	public static boolean isIgnoredClass(String internalName) {
-		return internalName.startsWith("java") || internalName.startsWith("sun") || internalName.startsWith("com/sun") || internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime");
+		return internalName.startsWith("java") || internalName.startsWith("sun") || internalName.startsWith("com/sun") || internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
+				|| internalName.startsWith("org/junit") || internalName.startsWith("junit/") || internalName.startsWith("edu/columbia/cs/psl/vmvm/Ant")
+				|| internalName.startsWith("org/apache/tools/ant");
 	}
 	public static AdditionalInterfaceClassloader cl = new AdditionalInterfaceClassloader();
 
@@ -28,10 +31,12 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 		if (isIgnoredClass(className))
 			return null;
 		try {
+			System.out.println("VMVMClassfiletransformer " + className);
 			ClassReader cr = new ClassReader(classfileBuffer);
 
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			ReinitCapabilityCV cv = new ReinitCapabilityCV(cw);
+			//new CheckClassAdapter(cw));
 			cr.accept(cv, 0);
 			byte [] ret =cw.toByteArray();
 			if(cv.getReClinitMethod() != null)
@@ -45,6 +50,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 					cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 					cw.visit(cv.version, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, newName, null, "java/lang/Object", null);
 					cw.visitSource(null, null);
+					cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, ReinitCapabilityCV.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;", null, null);
 					cv.getReClinitMethod().accept(cw);
 					cw.visitEnd();
 					if (DEBUG) {

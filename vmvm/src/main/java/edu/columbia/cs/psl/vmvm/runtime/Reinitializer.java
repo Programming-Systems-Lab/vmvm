@@ -8,12 +8,12 @@ public class Reinitializer {
 	private static native void _reinitCalled(Class c);
 	public static void markAllClassesForReinit()
 	{
-//		long start = System.currentTimeMillis();
-//		System.err.println("Start MCR ");
+		long start = System.currentTimeMillis();
+		System.err.println("Start MCR ");
 		if(engaged == 0)
 			throw new IllegalArgumentException("JVMTI Agent not loaded");
 		_markAllClassesForReinit();
-//		System.err.println("End MCR " + (System.currentTimeMillis() - start));
+		System.err.println("End MCR " + (System.currentTimeMillis() - start));
 	}
 	public static void reinitCalled(Class<?> c)
 	{

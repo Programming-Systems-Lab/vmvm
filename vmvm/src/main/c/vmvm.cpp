@@ -11,6 +11,8 @@
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 
+ #define PRINT_DEBUG
+//#define PRINT_TIMING
 typedef struct {
 	/* JVMTI Environment */
 	jvmtiEnv *jvmti;
@@ -49,6 +51,7 @@ typedef struct Clazz {
 typedef struct Field {
 	Clazz *clazz;
 	char *name;
+	bool ignored;
 	jfieldID fieldID;
 };
 
@@ -115,6 +118,8 @@ static void updateClassCache(JNIEnv *env) {
 //	sizeOfClassCache = nClasses;
 
 	Clazz *c;
+	jclass declaredOn;
+	jlong declaredOnTag;
 	int i;
 	jlong tag;
 	jint status;
@@ -150,6 +155,10 @@ static void updateClassCache(JNIEnv *env) {
 				err = gdata->jvmti->GetFieldName(c->clazz, fields[j],
 						&(c->fields[j]->name), NULL, NULL);
 				check_jvmti_error(gdata->jvmti, err, "Can't get field name");
+				if (strcmp("VMVM_RESET_IN_PROGRESS", c->fields[j]->name) == 0)
+					c->fields[j]->ignored = 1;
+				else
+					c->fields[j]->ignored = 0;
 			}
 			gdata->jvmti->Deallocate((unsigned char *) (void*) fields);
 			err = gdata->jvmti->SetTag(classes[i], (ptrdiff_t) (void*) c);
@@ -168,7 +177,7 @@ static void updateClassCache(JNIEnv *env) {
 				check_jvmti_error(gdata->jvmti, err, "Can't get intfcs");
 				for (i = 0; i < nIntfc; i++) {
 					err = gdata->jvmti->GetClassSignature(intfcs[i], &sig,
-							NULL);
+					NULL);
 					check_jvmti_error(gdata->jvmti, err,
 							"Can't get intfc name");
 					if (strcmp(sig,
@@ -202,6 +211,7 @@ static void updateClassCache(JNIEnv *env) {
 				gdata->jvmti->Deallocate((unsigned char *) (void*) intfcs);
 
 			} else {
+				//TODO - this right now is going to pick up an ignored class that extends/implements an unignored!!
 				//Cache the reinit method
 				c->reinitMethod = env->GetStaticMethodID(c->clazz,
 						"__vmvmReClinit", "(II)V");
@@ -210,18 +220,37 @@ static void updateClassCache(JNIEnv *env) {
 					env->ExceptionClear();
 					c->ignoredClass = true;
 				}
+				else
+				{
+					//Make sure it's actually declared on this guy
+					err = gdata->jvmti->GetMethodDeclaringClass(c->reinitMethod,&declaredOn);
+					err = gdata->jvmti->GetTag(declaredOn, &declaredOnTag);
+
+					if(declaredOnTag  != tag)
+					{
+						printf("Actually, going to ignore %s %lld,%lld\n",c->name,declaredOn,c->clazz);
+						c->ignoredClass = true;
+					}
+				}
 			}
 		}
 		c = (Clazz*) tag;
 		if (!c->ignoredClass && !c->isInstrumentedAndWatched) {
+#ifdef PRINT_DEBUG
+			fprintf(stderr,"Watching %s\n",c->name);
+#endif
 			replaceClassMethodsWithReinit(c);
 			for (j = 0; j < c->nFields; j++) {
-				err = gdata->jvmti->SetFieldAccessWatch(c->clazz,
-						c->fields[j]->fieldID);
-				check_jvmti_error(gdata->jvmti, err, "Cannot set field watch");
-				err = gdata->jvmti->SetFieldModificationWatch(c->clazz,
-						c->fields[j]->fieldID);
-				check_jvmti_error(gdata->jvmti, err, "Cannot set field watch");
+				if (!c->fields[j]->ignored) {
+					err = gdata->jvmti->SetFieldAccessWatch(c->clazz,
+							c->fields[j]->fieldID);
+					check_jvmti_error(gdata->jvmti, err,
+							"Cannot set field watch");
+					err = gdata->jvmti->SetFieldModificationWatch(c->clazz,
+							c->fields[j]->fieldID);
+					check_jvmti_error(gdata->jvmti, err,
+							"Cannot set field watch");
+				}
 			}
 			c->isInstrumentedAndWatched = true;
 		}
@@ -232,16 +261,26 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* jni, jclass class_being_redefined,
 		jobject loader, const char* name, jobject protection_domain,
 		jint class_data_len, const unsigned char* class_data,
 		jint* new_class_data_len, unsigned char** new_class_data) {
-	enter_critical_section(jvmti);
-	{
+#ifdef PRINT_TIMING
+	unsigned long startTime = time(NULL);
+#endif
+	if (!gdata->vmDead && class_being_redefined) {
+		fprintf(stderr, "CBClassfileloadhook\n");
 
-		if (!gdata->vmDead && class_being_redefined) {
+		enter_critical_section(jvmti);
+#ifdef PRINT_DEBUG
+		fprintf(stderr, "CBClassfileloadhookAcq\n");
+#endif
+		{
 			jlong tag;
 			Clazz *c;
 			jvmtiError err;
 			err = jvmti->GetTag(class_being_redefined, &tag);
 			c = (Clazz*) tag;
-			if (c->shouldInstrument) {
+			if (c && c->shouldInstrument) {
+#ifdef PRINT_DEBUG
+				printf("Instrumenting %s\n", c->name);
+#endif
 				c->shouldInstrument = false;
 
 				//Save a copy of the current class definition
@@ -293,33 +332,50 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* jni, jclass class_being_redefined,
 				}
 				gdata->nClassesInstrumented++;
 
-			} else {
+			} else if (c && c->class_data_len) {
+#ifdef PRINT_DEBUG
+				printf("Restoring %s\n",c->name);
+#endif
 				//Restore class to original state
 				*new_class_data_len = (jint) c->class_data_len;
 				*new_class_data = c->class_data;
 			}
+			else
+			{
+				printf("Unknown class\n");
+			}
 		}
-
+		exit_critical_section(jvmti);
 	}
-	exit_critical_section(jvmti);
-
+#ifdef PRINT_TIMING
+	fprintf(stderr,"ClassFileLoadHook: %u\n",(time(NULL)-startTime));
+#endif
 }
 static void markAsDone(Clazz *c) {
 	//Clear all field watches
+#ifdef PRINT_DEBUG
+	fprintf(stderr,"MAD %s\n", c->name);
+#endif
 	jvmtiError err;
 	int i;
 	for (i = 0; i < c->nFields; i++) {
-		err = gdata->jvmti->ClearFieldAccessWatch(c->clazz,
-				c->fields[i]->fieldID);
-		check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
-		err = gdata->jvmti->ClearFieldModificationWatch(c->clazz,
-				c->fields[i]->fieldID);
-		check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
+		if (!c->fields[i]->ignored) {
+			err = gdata->jvmti->ClearFieldAccessWatch(c->clazz,
+					c->fields[i]->fieldID);
+			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
+			err = gdata->jvmti->ClearFieldModificationWatch(c->clazz,
+					c->fields[i]->fieldID);
+			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
+		}
 	}
 	//Clear the method entry barriers
 	err = gdata->jvmti->RetransformClasses(1, &c->clazz);
 	check_jvmti_error(gdata->jvmti, err, "Can't modify class");
 	c->isInstrumentedAndWatched = 0;
+#ifdef PRINT_DEBUG
+	fprintf(stderr,"END MAD %s\n", c->name);
+#endif
+
 }
 
 static void reinitClassAndMarkAsDone(Clazz *c, JNIEnv *jni) {
@@ -327,6 +383,9 @@ static void reinitClassAndMarkAsDone(Clazz *c, JNIEnv *jni) {
 	 * Calls the reinitializer directly, and then sets the flag to retransform the class, and remove
 	 * any code in it that flags for reinit
 	 */
+#ifdef PRINT_DEBUG
+	fprintf(stderr, "Reinit class and mark as done %s\n",c->name);
+#endif
 	jni->CallStaticVoidMethod(c->clazz, c->reinitMethod, NULL);
 }
 void JNICALL
@@ -338,8 +397,12 @@ cbFieldModification(jvmtiEnv *jvmti, JNIEnv* jni, jthread thread,
 	err = jvmti->GetTag(field_klass, &tag);
 	check_jvmti_error(jvmti, err, "Cant get class tag");
 	if (tag) {
+#ifdef PRINT_DEBUG
+		fprintf(stderr, "CB field mod %s\n", ((Clazz*) tag)->name);
+#endif
 		reinitClassAndMarkAsDone((Clazz*) tag, jni);
-	}
+	} else
+		fprintf(stderr, "Unknown CB field mod\n");
 }
 void JNICALL
 cbFieldAccess(jvmtiEnv *jvmti, JNIEnv* jni, jthread thread, jmethodID method,
@@ -350,8 +413,12 @@ cbFieldAccess(jvmtiEnv *jvmti, JNIEnv* jni, jthread thread, jmethodID method,
 	err = jvmti->GetTag(field_klass, &tag);
 	check_jvmti_error(jvmti, err, "Cant get class tag");
 	if (tag) {
+#ifdef PRINT_DEBUG
+		fprintf(stderr, "CB field acc %s\n", ((Clazz*) tag)->name);
+#endif
 		reinitClassAndMarkAsDone((Clazz*) tag, jni);
-	}
+	} else
+		fprintf(stderr, "Unknown CB field acc\n");
 }
 
 JNIEXPORT static void JNICALL markAllClassesForReinit(JNIEnv *env,
@@ -371,8 +438,13 @@ JNIEXPORT static void JNICALL reinitCalled(JNIEnv *env, jclass klass,
 	err = gdata->jvmti->GetTag(tgt, &tag);
 	check_jvmti_error(gdata->jvmti, err, "Cant get class tag");
 	if (tag) {
+#ifdef PRINT_DEBUG
+		fprintf(stderr, "Reinit called %s\n", ((Clazz*) tag)->name);
+#endif
 		markAsDone((Clazz*) tag);
 	}
+	else
+		fprintf(stderr, "Unknown reinit called\n");
 }
 
 /*
