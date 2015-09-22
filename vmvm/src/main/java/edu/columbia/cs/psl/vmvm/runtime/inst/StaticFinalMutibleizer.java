@@ -1,5 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
+import java.util.HashSet;
+
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -12,14 +14,19 @@ import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 public class StaticFinalMutibleizer extends InstructionAdapter implements
 		Opcodes {
 
-	public StaticFinalMutibleizer(MethodVisitor mv) {
+	private HashSet<String> ownersOfStaticFields;
+	public StaticFinalMutibleizer(MethodVisitor mv, HashSet<String> ownersOfStaticFields) {
 		super(Opcodes.ASM5, mv);
+		this.ownersOfStaticFields = ownersOfStaticFields;
 	}
 
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name,
 			String desc) {
 		Type originalType = Type.getType(desc);
+		if((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner))
+			ownersOfStaticFields.add(owner);
+
 		if ((opcode == GETSTATIC || opcode == PUTSTATIC)
 				&& !VMVMClassFileTransformer.isIgnoredClass(owner)
 				&& (originalType.getSort() == Type.ARRAY || originalType

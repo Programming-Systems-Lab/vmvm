@@ -1,7 +1,8 @@
-package edu.columbia.cs.psl.vmvm;
+package edu.columbia.cs.psl.vmvmtest;
 
 import static org.junit.Assert.*;
 
+import org.junit.After;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
@@ -20,13 +21,22 @@ public class ReinitializerITCase {
 		assertEquals(4, foo());
 	}
 
+	int getOtherClassFoo() {
+		return OtherClass.foo;
+	}
+
 	@Test
 	public void testReinitCalledThroughFields() throws Exception {
-		foo = 3;
+		OtherClass.foo = 3;
 		Reinitializer.markAllClassesForReinit();
-		assertEquals(5, foo());
-		foo = 4;
-		assertEquals(4, foo());
+		assertEquals(5, getOtherClassFoo());
+		OtherClass.foo = 4;
+		assertEquals(4, getOtherClassFoo());
+	}
+
+	@After
+	public void ensureThisClassIsReinited() {
+		foo();
 	}
 
 	@Test
@@ -40,4 +50,5 @@ public class ReinitializerITCase {
 	static int foo() {
 		return foo;
 	}
+
 }

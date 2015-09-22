@@ -240,18 +240,18 @@ static void updateClassCache(JNIEnv *env) {
 			fprintf(stderr,"Watching %s\n",c->name);
 #endif
 			replaceClassMethodsWithReinit(c);
-			for (j = 0; j < c->nFields; j++) {
-				if (!c->fields[j]->ignored) {
-					err = gdata->jvmti->SetFieldAccessWatch(c->clazz,
-							c->fields[j]->fieldID);
-					check_jvmti_error(gdata->jvmti, err,
-							"Cannot set field watch");
-					err = gdata->jvmti->SetFieldModificationWatch(c->clazz,
-							c->fields[j]->fieldID);
-					check_jvmti_error(gdata->jvmti, err,
-							"Cannot set field watch");
-				}
-			}
+//			for (j = 0; j < c->nFields; j++) {
+//				if (!c->fields[j]->ignored) {
+//					err = gdata->jvmti->SetFieldAccessWatch(c->clazz,
+//							c->fields[j]->fieldID);
+//					check_jvmti_error(gdata->jvmti, err,
+//							"Cannot set field watch");
+//					err = gdata->jvmti->SetFieldModificationWatch(c->clazz,
+//							c->fields[j]->fieldID);
+//					check_jvmti_error(gdata->jvmti, err,
+//							"Cannot set field watch");
+//				}
+//			}
 			c->isInstrumentedAndWatched = true;
 		}
 	}
@@ -358,16 +358,16 @@ static void markAsDone(Clazz *c) {
 #endif
 	jvmtiError err;
 	int i;
-	for (i = 0; i < c->nFields; i++) {
-		if (!c->fields[i]->ignored) {
-			err = gdata->jvmti->ClearFieldAccessWatch(c->clazz,
-					c->fields[i]->fieldID);
-			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
-			err = gdata->jvmti->ClearFieldModificationWatch(c->clazz,
-					c->fields[i]->fieldID);
-			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
-		}
-	}
+//	for (i = 0; i < c->nFields; i++) {
+//		if (!c->fields[i]->ignored) {
+//			err = gdata->jvmti->ClearFieldAccessWatch(c->clazz,
+//					c->fields[i]->fieldID);
+//			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
+//			err = gdata->jvmti->ClearFieldModificationWatch(c->clazz,
+//					c->fields[i]->fieldID);
+//			check_jvmti_error(gdata->jvmti, err, "Can't clear field watch");
+//		}
+//	}
 	//Clear the method entry barriers
 	err = gdata->jvmti->RetransformClasses(1, &c->clazz);
 	check_jvmti_error(gdata->jvmti, err, "Can't modify class");

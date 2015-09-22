@@ -1,4 +1,4 @@
-package edu.columbia.cs.psl.vmvm;
+package edu.columbia.cs.psl.vmvmtest;
 
 import java.util.HashMap;
 
