@@ -94,6 +94,7 @@ public class ReinitCapabilityCV extends ClassVisitor {
 			mv = clinitMethod;
 		} else
 			mv = super.visitMethod(access, name, desc, signature, exceptions);
+		mv = new SystemPropertyLogger(mv);
 		mv = new StaticFinalMutibleizer(mv, ownersOfStaticFields);
 		mv = new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions);
 		mv = new ReflectionHackMV(mv, fixLdcClass, className);
@@ -102,7 +103,6 @@ public class ReinitCapabilityCV extends ClassVisitor {
 
 	private MethodNode reClinitMethod;
 
-	private static final boolean CLINIT_ORDER_DEBUG = false;
 
 	@Override
 	public void visitEnd() {
@@ -114,7 +114,6 @@ public class ReinitCapabilityCV extends ClassVisitor {
 
 		if (!isInterface) {
 			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;", null, null);
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.TOTAL_STATIC_CLASSES_CHECKED, "I", null, 0);
 			for (String s : ownersOfStaticFields) {
 				super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, s.replace("/", "_") + Constants.TOTAL_STATIC_CLASSES_CHECKED, "Z", null, 1);
 			}
@@ -194,13 +193,14 @@ public class ReinitCapabilityCV extends ClassVisitor {
 		} else
 			mv.visitLdcInsn(Type.getObjectType(className));
 
+
 		mv.visitInsn(Opcodes.DUP);
 		mv.visitInsn(Opcodes.MONITORENTER);
-
+	
 		mv.visitFieldInsn(Opcodes.GETSTATIC, classNameWField, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		Label notInInit = new Label();
 		mv.visitJumpInsn(Opcodes.IFNULL, notInInit);
-
+	
 		mv.visitFieldInsn(Opcodes.GETSTATIC, classNameWField, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 		mv.visitJumpInsn(Opcodes.IF_ACMPEQ, continu);
@@ -217,12 +217,14 @@ public class ReinitCapabilityCV extends ClassVisitor {
 		mv.visitFieldInsn(Opcodes.PUTSTATIC, classNameWField, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
 		mv.visitInsn(Opcodes.DUP);
 		mv.visitInsn(Opcodes.MONITOREXIT);
-
+		if(className.startsWith("org/apache/coyote/Act"))
+			println(mv,"Exited barrier");
 		//		mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, Constants.VMVM_STATIC_RESET_METHOD, "()V", false);
 		//do the init
 		mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
 		mv.visitInsn(Opcodes.ICONST_0);
 		mv.visitFieldInsn(Opcodes.PUTFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+
 		if (fixLdcClass) {
 			mv.visitLdcInsn(className.replace("/", "."));
 			mv.visitInsn(Opcodes.ICONST_0);
@@ -234,8 +236,6 @@ public class ReinitCapabilityCV extends ClassVisitor {
 			mv.visitLdcInsn(Type.getObjectType(className));
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "reinitCalled", "(Ljava/lang/Class;)V", false);
 
-		mv.visitIntInsn(Opcodes.BIPUSH, ownersOfStaticFields.size());
-		mv.visitFieldInsn(Opcodes.PUTSTATIC, classNameWField, Constants.TOTAL_STATIC_CLASSES_CHECKED, "I");
 		for (String s : ownersOfStaticFields) {
 			mv.visitInsn(Opcodes.ICONST_0);
 			mv.visitFieldInsn(Opcodes.PUTSTATIC, classNameWField, s.replace("/", "_") + Constants.TOTAL_STATIC_CLASSES_CHECKED, "Z");
@@ -355,7 +355,7 @@ public class ReinitCapabilityCV extends ClassVisitor {
 	}
 
 	public void println(MethodVisitor mv, String toPrint) {
-		mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "err", "Ljava/io/PrintStream;");
 		mv.visitLdcInsn(toPrint + " : ");
 		mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V", false);
 

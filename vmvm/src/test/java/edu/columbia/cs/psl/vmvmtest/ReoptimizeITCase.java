@@ -14,7 +14,24 @@ public class ReoptimizeITCase {
 	public void testReoptimize() throws Exception {
 		for (int i = 0; i < 10; i++) {
 			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
 			Reinitializer.markAllClassesForReinit();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
+			foo();
 			foo();
 		}
 	}

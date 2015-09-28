@@ -1,6 +1,5 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
-
 import java.lang.instrument.Instrumentation;
 
 public class PreMain {
@@ -8,6 +7,6 @@ public class PreMain {
 
 	public static void premain(String args, Instrumentation inst) {
 		Reinitializer.inst = inst;
-		inst.addTransformer(new VMVMClassFileTransformer());
+		inst.addTransformer(new VMVMClassFileTransformer(), true);
 	}
 }

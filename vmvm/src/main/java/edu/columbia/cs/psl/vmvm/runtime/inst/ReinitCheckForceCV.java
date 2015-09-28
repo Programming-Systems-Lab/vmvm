@@ -5,6 +5,7 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AnalyzerAdapter;
+import org.objectweb.asm.commons.LocalVariablesSorter;
 
 public class ReinitCheckForceCV extends ClassVisitor {
 	private String className;
@@ -12,8 +13,11 @@ public class ReinitCheckForceCV extends ClassVisitor {
 	private boolean fixLdcClass;
 	private boolean skipFrames;
 	
-	public ReinitCheckForceCV(ClassVisitor cv) {
+	private boolean doOpt;
+	
+	public ReinitCheckForceCV(ClassVisitor cv, boolean doOpt) {
 		super(Opcodes.ASM5, cv);
+		this.doOpt = doOpt;
 	}
 
 	@Override
@@ -32,7 +36,10 @@ public class ReinitCheckForceCV extends ClassVisitor {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		if (!isInterface && !name.equals("__vmvmReClinit")) {
 			AnalyzerAdapter an = new AnalyzerAdapter(className, access, name, desc, mv);
-			mv = new ReinitForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames);
+			mv = new ReinitForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames, doOpt);
+			LocalVariablesSorter lvs = new LocalVariablesSorter(access, desc, mv);
+			((ReinitForceMV)mv).setLVS(lvs);
+			mv = lvs;
 		}
 		return mv;
 	}
