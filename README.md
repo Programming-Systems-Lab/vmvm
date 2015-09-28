@@ -2,6 +2,12 @@
 ==========
 **VMVM** is a system for isolating unit tests with very low overhead.
 
+This repository is contains information related to the tool VMVM presented at ICSE, 2014. 
+
+This repository is not the original repository for this tool. 
+
+This repository was constructed by Sumeet Agarwal, Vineela Boddula, Sarah Elder, Shrenuj Gandhi, and Alex Valkovsky under the supervision of Emerson Murphy-Hill. 
+
 This repository contains the source and a [runnable binary](https://github.com/Programming-Systems-Lab/vmvm/blob/master/binaries/vmvm.jar) for **VMVM**.
 
 ###For more information
