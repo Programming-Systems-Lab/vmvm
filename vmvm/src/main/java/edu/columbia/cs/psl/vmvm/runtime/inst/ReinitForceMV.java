@@ -174,9 +174,10 @@ public class ReinitForceMV extends MethodVisitor {
 			super.visitVarInsn(Opcodes.ISTORE, tmpLVidx);
 			super.visitMethodInsn(Opcodes.INVOKESTATIC, owner, "__vmvmReClinit", "()V", false);
 			super.visitLabel(ok);
-			if (!skipFrames)
+			if (!skipFrames) {
 				fn.accept(this);
-			super.visitInsn(Opcodes.NOP);
+				super.visitInsn(Opcodes.NOP);
+			}
 		}
 	}
 

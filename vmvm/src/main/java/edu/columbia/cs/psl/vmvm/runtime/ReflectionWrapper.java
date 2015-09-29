@@ -11,12 +11,38 @@ import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz) {
 		Method[] r = clazz.getDeclaredMethods();
-		return r;
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+			return r;
+		Method[] ret = new Method[r.length - 1];
+		int j = 0;
+		for (int i = 0; i < r.length; i++) {
+			if (r[i].getName().equals("__vmvmReClinit"))
+				continue;
+			ret[j] = r[i];
+			j++;
+		}
+		return ret;
 	}
-
+	public static Class<?> getType(Field f) throws IllegalArgumentException, IllegalAccessException
+	{
+		Class ret = f.getType();
+		if(ret == MutableInstance.class)
+			return ((MutableInstance)f.get(null)).getType();
+		return ret;
+	}
 	public static Method[] getMethods(Class<?> clazz) {
 		Method[] r = clazz.getMethods();
-		return r;
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+			return r;
+		Method[] ret = new Method[r.length - 1];
+		int j = 0;
+		for (int i = 0; i < r.length; i++) {
+			if (r[i].getName().equals("__vmvmReClinit"))
+				continue;
+			ret[j] = r[i];
+			j++;
+		}
+		return ret;
 	}
 
 	public static void set(Field f, Object owner, Object val) throws IllegalArgumentException, IllegalAccessException {

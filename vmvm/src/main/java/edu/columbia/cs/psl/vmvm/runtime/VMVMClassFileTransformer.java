@@ -13,6 +13,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
@@ -21,7 +23,7 @@ import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCheckForceCV;
 
 public class VMVMClassFileTransformer implements ClassFileTransformer {
 	public static boolean isIgnoredClass(String internalName) {
-		return internalName.startsWith("java") || internalName.startsWith("sun") || internalName.startsWith("com/sun") || internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
+		return internalName.startsWith("java") || internalName.startsWith("jdk") || internalName.startsWith("sun") || internalName.startsWith("com/sun") || internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
 				|| internalName.startsWith("org/junit") || internalName.startsWith("junit/") || internalName.startsWith("edu/columbia/cs/psl/vmvm/")
 				|| internalName.startsWith("org/apache/maven/surefire") || internalName.startsWith("org/apache/tools/");
 	}
@@ -62,6 +64,27 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 					cs.hasClassesToOptAway = false;
 					return cw.toByteArray();
 				}
+				if(cs.fullyInstrumentedClass == null)
+				{
+					ClassReader cr = new ClassReader(cs.originalClass);
+					ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+					ReinitCheckForceCV cv = new ReinitCheckForceCV(cw, false);
+					try {
+						cr.accept(cv, ClassReader.EXPAND_FRAMES);
+					} catch (Throwable t) {
+						throw new IllegalStateException(t);
+					}
+					cs.fullyInstrumentedClass = cw.toByteArray();
+					if (VMVMClassFileTransformer.DEBUG) {
+						File debugDir = new File("debug-instheavy");
+						if (!debugDir.exists())
+							debugDir.mkdir();
+						File f = new File("debug-instheavy/" + cs.name.replace("/", ".") + ".class");
+						FileOutputStream fos = new FileOutputStream(f);
+						fos.write(cs.fullyInstrumentedClass);
+						fos.close();
+					}
+				}
 				return cs.fullyInstrumentedClass;
 
 			} catch (Throwable e) {
@@ -74,9 +97,20 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			return null;
 		}
 		try {
-			//			System.err.println("VMVMClassfiletransformer PLAIN " + className);
+			if(DEBUG)
+						System.err.println("VMVMClassfiletransformer PLAIN " + className);
 			ClassReader cr = new ClassReader(classfileBuffer);
 
+			if(DEBUG)
+			{
+				ClassNode cn = new ClassNode();
+				cr.accept(cn, 0);
+				for(Object s : cn.interfaces)
+				{
+					if(s.equals(Type.getInternalName(VMVMInstrumented.class)))
+						throw new IllegalArgumentException();
+				}
+			}
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			ReinitCapabilityCV cv = new ReinitCapabilityCV(new CheckClassAdapter(cw, false));
 			//new CheckClassAdapter(cw));
@@ -106,8 +140,8 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			}
 
 			ret = cw.toByteArray();
-			ClassReader cr2 = new ClassReader(ret);
-			cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+//			ClassReader cr2 = new ClassReader(ret);
+//			cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 			if (cv.getReClinitMethod() != null) {
 				//Also, generate a resetter for the interface
 				String newName = cr.getClassName() + "$$VMVMRESETTER";
@@ -134,6 +168,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 						fos.close();
 					}
 					byte[] b = cw.toByteArray();
+//					System.out.println("Got resetter: " + newName);
 					cl.addClass(newName.replace("/", "."), b);
 					Class<?> c = cl.loadClass(newName.replace("/", "."));
 					//					System.out.println(c);

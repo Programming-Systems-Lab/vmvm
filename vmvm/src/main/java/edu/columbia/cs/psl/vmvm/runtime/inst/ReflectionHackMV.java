@@ -29,6 +29,11 @@ public class ReflectionHackMV extends InstructionAdapter implements Opcodes {
             super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ReflectionWrapper.class), "preNewInstance", "(Ljava/lang/Class;)Ljava/lang/Class;",false);
             super.visitMethodInsn(opcode, owner, name, desc, itfc);
         }
+    	else if(owner.equals("java/lang/reflect/Field") && name.equals("getType"))
+    	{
+            super.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ReflectionWrapper.class), name, "(Ljava/lang/reflect/Field;)Ljava/lang/Class;", false);
+
+    	}
         else if((Type.getInternalName(Class.class).equals(owner) && name.equals("forName")))        		
         {
         	owner = Type.getInternalName(ReflectionWrapper.class);
@@ -144,6 +149,5 @@ public class ReflectionHackMV extends InstructionAdapter implements Opcodes {
         {
             super.visitMethodInsn(opcode, owner, name, desc, itfc);
         }
-        //XXX TODO also need to handle invokestatic, getstatic, putstatic
     }
 }
