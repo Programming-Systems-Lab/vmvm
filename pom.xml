@@ -109,7 +109,7 @@
 	<modules>
 		<module>vmvm</module>
 		<module>vmvm-ant-junit-formatter</module>
-		<module>vmvm-internal-static-detector</module>
+<!--		<module>vmvm-internal-static-detector</module>-->
 	</modules>
 
 	<build>
@@ -223,5 +223,12 @@
 			</plugin>
 		</plugins>
 	</build>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>psl.internal</id>
+            <name>PSL Internal Repository</name>
+            <url>http://ase.cs.columbia.edu:8282/repository/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
