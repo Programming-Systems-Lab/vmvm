@@ -8,12 +8,20 @@ import org.junit.Test;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
 import edu.columbia.cs.psl.vmvmtest.classes.ClassWithOneSField;
+import edu.columbia.cs.psl.vmvmtest.classes.IFace;
 import edu.columbia.cs.psl.vmvmtest.classes.SubClassWithAnotherSField;
 import edu.columbia.cs.psl.vmvmtest.classes.TryCatchInInitClass;
 
 public class ReinitializerITCase {
 	public static int foo = 5;
 
+	@Test
+	public void testReinitDirectIface() throws Exception {
+		ClassWithOneSField inst = IFace.inst;
+		Reinitializer.markAllClassesForReinit();
+		inst = ClassWithOneSField.inst;
+		assertSame(IFace.inst, inst);
+	}
 	@Test
 	public void testTryCatchInClinit() throws Exception {
 		TryCatchInInitClass c = new TryCatchInInitClass();

@@ -3,6 +3,11 @@ package edu.columbia.cs.psl.vmvmtest.classes;
 public class ClassWithOneSField implements IFace {
 	public static int foo = 5;
 	public int val = 5;
+
+	static
+	{
+		System.out.println("Classwonesf init");
+	}
 	public ClassWithOneSField()
 	{
 		
@@ -14,5 +19,9 @@ public class ClassWithOneSField implements IFace {
 	static int getFoo()
 	{
 		return foo;
+	}
+	public static ClassWithOneSField getInst()
+	{
+		return inst;
 	}
 }

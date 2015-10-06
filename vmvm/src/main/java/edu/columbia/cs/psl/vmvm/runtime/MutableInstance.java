@@ -1,6 +1,8 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
-public class MutableInstance {
+import java.io.Serializable;
+
+public class MutableInstance implements Serializable {
 	public static final String INTERNAL_NAME="edu/columbia/cs/psl/vmvm/runtime/MutableInstance";
 	public static final String DESC = "Ledu/columbia/cs/psl/vmvm/runtime/MutableInstance;";
 	private Object inst;

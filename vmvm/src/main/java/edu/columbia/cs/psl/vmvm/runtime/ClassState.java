@@ -1,6 +1,5 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
-import java.util.LinkedList;
 
 public final class ClassState {
 	public final static String INTERNAL_NAME="edu/columbia/cs/psl/vmvm/runtime/ClassState";
@@ -11,10 +10,15 @@ public final class ClassState {
 	public boolean hasClassesToOptAway;
 	public byte[] originalClass;
 	public byte[] fullyInstrumentedClass;
+	public Class<?> clazz;
 	public String name;
-	public void addClassToOptAway(String s)
+	public ClassState(Class<?> clazz)
 	{
-//		System.out.println("Can opt away in " + name + " - " + s);
+		this.clazz = clazz;
+		this.name = clazz.getName();
+	}
+	public void addClassToOptAway()
+	{
 		hasClassesToOptAway = true;
 	}
 }

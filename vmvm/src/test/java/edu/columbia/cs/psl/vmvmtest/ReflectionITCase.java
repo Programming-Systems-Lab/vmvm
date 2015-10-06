@@ -63,6 +63,6 @@ public class ReflectionITCase {
 	}
 	@Test
 	public void testCorrectNumberOfMethods() throws Exception {
-		assertEquals(1, ClassWithOneSField.class.getDeclaredMethods().length);
+		assertEquals(2, ClassWithOneSField.class.getDeclaredMethods().length);
 	}
 }

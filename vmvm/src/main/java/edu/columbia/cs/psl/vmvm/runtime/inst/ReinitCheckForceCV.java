@@ -34,7 +34,8 @@ public class ReinitCheckForceCV extends ClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		if (!isInterface && !name.equals("__vmvmReClinit")) {
+	
+		if (!isInterface) {
 			AnalyzerAdapter an = new AnalyzerAdapter(className, access, name, desc, mv);
 			mv = new ReinitForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames, doOpt);
 			LocalVariablesSorter lvs = new LocalVariablesSorter(access, desc, mv);

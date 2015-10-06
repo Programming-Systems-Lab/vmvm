@@ -35,14 +35,15 @@ public final class Reinitializer {
 
 	public static Instrumentation inst;
 
-	static LinkedList<WeakReference<Class>> classesToReinit = new LinkedList<WeakReference<Class>>();
+	static LinkedList<WeakReference<ClassState>> classesToReinit = new LinkedList<WeakReference<ClassState>>();
 	public static HashSet<String> classesNotYetReinitialized = new HashSet<String>();
 
-	public static final void logMessage(String s){
+	public static final void logMessage(String s) {
 		System.err.println(s + ": " + Thread.currentThread().getName());
 	}
+
 	public static final void callReinitOnInterface(String c) {
-		//		System.out.println("Reinit on intfc" + c);
+//				System.out.println("Reinit on intfc" + c);
 		try {
 			Class cl = lookupInterfaceClass(c);
 			cl.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
@@ -64,94 +65,94 @@ public final class Reinitializer {
 		//		long start = System.currentTimeMillis();
 		//		System.err.println("Start MCR ");
 		//		ClassDefinition[] toReinit = new ClassDefinition[classesToReinit.size()];
+		resetInternalStatics();
+
 		synchronized (shutdownHooks) {
-			for(Thread t: shutdownHooks)
-			{
+			for (Thread t : shutdownHooks) {
 				Runtime.getRuntime().removeShutdownHook(t);
 			}
 			shutdownHooks.clear();
 		}
-		int i = 0;
-		LinkedList<WeakReference<Class>> toReinit = classesToReinit;
-		classesToReinit = new LinkedList<WeakReference<Class>>();
-		classesNotYetReinitialized.clear();
-		for (WeakReference<Class> w : toReinit) {
-			if (w.get() != null) {
-				Class c = w.get();
-				classesNotYetReinitialized.add(w.get().getName());
-				try {
-					Field f = c.getField(Constants.VMVM_NEEDS_RESET);
-					if (!f.isAccessible())
-						f.setAccessible(true);
-					ClassState cs = (ClassState) f.get(null);
-				
-					cs.needsReinit = true;
-					cs.hasClassesToOptAway = false;
-					if (VMVMClassFileTransformer.DEBUG) {
-						System.out.println("MCR " + c.getName());
-						File debugDir = new File("debug-readin");
-						if (!debugDir.exists())
-							debugDir.mkdir();
-						try {
-							File fi = new File("debug-readin/" + c.getName().replace("/", ".") + ".class");
-							FileOutputStream fos = new FileOutputStream(fi);
-							fos.write(cs.fullyInstrumentedClass);
-							fos.close();
-						} catch (Throwable t) {
-							t.printStackTrace();
-						}
-					}
-					inst.redefineClasses(new ClassDefinition(c, cs.fullyInstrumentedClass));
-					i++;
-					//					System.err.println("Adding checks in " + c);
-				} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException | NoClassDefFoundError | ClassNotFoundException | UnmodifiableClassException ex) {
-					ex.printStackTrace();
+		try {
+			ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
+			if (mbeanServers != null && mbeanServers.size() > 0) {
+				for (MBeanServer server : mbeanServers) {
+					//				System.out.println("Releasing server " + server);
+					MBeanServerFactory.releaseMBeanServer(server);
 				}
-
 			}
+			mbeanServers = null;
+			MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+			if (server.getMBeanCount() > 0) {
+				Set<ObjectName> onames = server.queryNames(null, null);
+				for (ObjectName name : onames)
+					try {
+						server.unregisterMBean(name);
+					} catch (Throwable e) {
+					}
+			}
+			server = null;
+		} catch (Throwable t) {
+			//nop
 		}
-		//		classesToReinit = toReinit;
-		resetInternalStatics();
+
 		for (String s : properties.keySet()) {
-			//				System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
+//							System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
 			if (properties.get(s) != null)
 				System.setProperty(s, properties.get(s));
 			else
 				System.clearProperty(s);
 		}
 		properties.clear();
-		Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
+		LinkedList<WeakReference<ClassState>> toReinit = classesToReinit;
+		classesToReinit = new LinkedList<WeakReference<ClassState>>();
+		classesNotYetReinitialized.clear();
+		for (WeakReference<ClassState> w : toReinit) {
+			if (w.get() != null) {
+				ClassState c = w.get();
+				classesNotYetReinitialized.add(c.name);
+				try {
+					c.needsReinit = true;
+					c.hasClassesToOptAway = false;
+					if (VMVMClassFileTransformer.DEBUG) {
+						System.out.println("MCR " + c.name);
+						File debugDir = new File("debug-readin");
+						if (!debugDir.exists())
+							debugDir.mkdir();
+						try {
+							File fi = new File("debug-readin/" + c.name.replace("/", ".") + ".class");
+							FileOutputStream fos = new FileOutputStream(fi);
+							fos.write(c.fullyInstrumentedClass);
+							fos.close();
+						} catch (Throwable t) {
+							t.printStackTrace();
+						}
+					}
+					if(VMVMClassFileTransformer.ALWAYS_REOPT && c.isOptimized)
+						inst.redefineClasses(new ClassDefinition(c.clazz, c.fullyInstrumentedClass));
+					//					System.err.println("Adding checks in " + c);
+				} catch (IllegalArgumentException | NoClassDefFoundError | ClassNotFoundException | UnmodifiableClassException ex) {
+					ex.printStackTrace();
+				}
 
-		ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
-		if (mbeanServers != null && mbeanServers.size() > 0) {
-			for (MBeanServer server : mbeanServers) {
-				//				System.out.println("Releasing server " + server);
-				MBeanServerFactory.releaseMBeanServer(server);
 			}
 		}
-		mbeanServers = null;
-//		MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-//		if (server.getMBeanCount() > 0) {
-//			Set<ObjectName> onames = server.queryNames(null, null);
-//			for (ObjectName name : onames)
-//				try {
-//					server.unregisterMBean(name);
-//				} catch (Throwable e) {
-//				}
-//		}
-//		server = null;
+		Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
+
 		//		System.err.println("End MCR " + (System.currentTimeMillis() - start));
 	}
+
 	private static HashSet<Thread> shutdownHooks = new HashSet<Thread>();
-	public static void addShutdownHook(Runtime r, Thread t)
-	{
+
+	public static void addShutdownHook(Runtime r, Thread t) {
 		synchronized (shutdownHooks) {
 			r.addShutdownHook(t);
 			shutdownHooks.add(t);
 		}
 	}
+
 	public static final void fixEnum(Class<?> c) {
-		if(VMVMClassFileTransformer.DEBUG)
+		if (VMVMClassFileTransformer.DEBUG)
 			System.out.println("Fixup enum " + c);
 		try {
 			Field f = Class.class.getDeclaredField("enumConstants");
@@ -167,7 +168,7 @@ public final class Reinitializer {
 
 	public static final void reopt(Class<?> c) {
 		try {
-//						System.err.println("Reoptimizing " + c);
+									System.err.println("Reoptimizing " + c);
 			synchronized (c) {
 				inst.retransformClasses(c);
 				c.notifyAll();
@@ -177,25 +178,25 @@ public final class Reinitializer {
 		}
 	}
 
-	public static final void reinitCalled(Class<?> c) {
+	public static final void reinitCalled(ClassState c) {
 		if (VMVMClassFileTransformer.DEBUG)
-			System.out.println("REinit called " + c + " in " + Thread.currentThread().getName());
-		classesNotYetReinitialized.remove(c.getName());
-		classesToReinit.add(new WeakReference<Class>(c));
+			System.out.println("REinit called " + c.clazz + " in " + Thread.currentThread().getName());
+//		if(c.getName().contains("BaseTest"))
+//			new Exception().printStackTrace();
+		classesNotYetReinitialized.remove(c.name);
+		classesToReinit.add(new WeakReference<ClassState>(c));
 		//		inst.redefineClasses(definitions);
 	}
 
-	public static final void clinitCalled(Class<?> c) {
-//		if (VMVMClassFileTransformer.DEBUG)
-//				System.out.println("CLinit called " + c);
-		classesToReinit.add(new WeakReference<Class>(c));
+	public static final void clinitCalled(ClassState c) {
+				if (VMVMClassFileTransformer.DEBUG)
+						System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
+//				if(c.getName().contains("BaseTest"))
+//					new Exception().printStackTrace();
+		classesToReinit.add(new WeakReference<ClassState>(c));
 		try {
-			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.getName().replace(".", "/"));
-			Field field = c.getDeclaredField(Constants.VMVM_NEEDS_RESET);
-			field.setAccessible(true);
-			ClassState cs = (ClassState) field.get(null);
-			cs.originalClass = uninst;
-			cs.name = c.getName();
+			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.name.replace(".", "/"));
+			c.originalClass = uninst;
 			ClassReader cr = new ClassReader(uninst);
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			ReinitCheckForceCV cv = new ReinitCheckForceCV(cw, false);
@@ -204,18 +205,18 @@ public final class Reinitializer {
 			} catch (Throwable t) {
 				throw new IllegalStateException(t);
 			}
-			cs.fullyInstrumentedClass = cw.toByteArray();
+			c.fullyInstrumentedClass = cw.toByteArray();
 			if (VMVMClassFileTransformer.DEBUG) {
 				File debugDir = new File("debug-instheavy");
 				if (!debugDir.exists())
 					debugDir.mkdir();
-				File f = new File("debug-instheavy/" + c.getName().replace("/", ".") + ".class");
+				File f = new File("debug-instheavy/" + c.name.replace("/", ".") + ".class");
 				FileOutputStream fos = new FileOutputStream(f);
-				fos.write(cs.fullyInstrumentedClass);
+				fos.write(c.fullyInstrumentedClass);
 				fos.close();
 			}
 
-		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException | IOException e) {
+		} catch (IllegalArgumentException | SecurityException | IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -223,7 +224,7 @@ public final class Reinitializer {
 	public static Class<?> lookupInterfaceClass(String name) {
 		try {
 			Class ret = VMVMClassFileTransformer.cl.loadClass(name.replace("/", "."));
-			if(ret ==null)
+			if (ret == null)
 				throw new IllegalArgumentException("Cant find interface resetter for " + name);
 			return ret;
 		} catch (Throwable t) {
@@ -828,7 +829,16 @@ public final class Reinitializer {
 			properties.put(key, System.getProperty(key));
 		return System.setProperty(key, value);
 	}
-
+	public static String logAndGetProperty(String key) {
+		String ret = System.getProperty(key);
+//System.out.println("SYs prop " + key+"="+ret);
+		return ret;
+	}
+	public static String logAndGetProperty(String key, String def) {
+		String ret = System.getProperty(key,def);
+//System.out.println("SYs prop " + key+"="+ret +", def was " + def);
+		return ret;
+	}
 	public static void logAndSetProperty(Properties values) {
 		for (Object key : values.keySet()) {
 			if (!properties.containsKey(key))

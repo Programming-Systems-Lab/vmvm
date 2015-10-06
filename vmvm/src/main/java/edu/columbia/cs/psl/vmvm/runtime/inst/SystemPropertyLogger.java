@@ -97,6 +97,7 @@ public class SystemPropertyLogger extends InstructionAdapter {
 	static {
 		int n = 0;
 		Scanner s = new Scanner(Reinitializer.class.getResourceAsStream("internal-statics"));
+
 		while (s.hasNextLine()) {
 			String l = s.nextLine();
 			String[] d = l.split("\t");
@@ -117,6 +118,7 @@ public class SystemPropertyLogger extends InstructionAdapter {
 					c.getMethods.put(z, -1);
 			internalStatics.put(name, c);
 		}
+		s.close();
 	}
 	@Override
 	public void visitMethodInsn(int opcode, String owner, String name,
@@ -133,6 +135,11 @@ public class SystemPropertyLogger extends InstructionAdapter {
 			owner = Reinitializer.INTERNAL_NAME;
 			name = "logAndSetProperty";
 		}
+		if((owner.equals("java/lang/System") && name.equals("getProperty")))
+		{
+			owner = Reinitializer.INTERNAL_NAME;
+			name = "logAndGetProperty";
+		}
 		else if(internalStatics.containsKey(owner))
 		{
 			Type[] args =Type.getArgumentTypes(desc);
@@ -144,8 +151,11 @@ public class SystemPropertyLogger extends InstructionAdapter {
 				if(owner.equals("javax/swing/JDialog") || owner.equals("javax/swing/JFrame"))
 					newName = name.replace("set", "is");
 				if(owner.equals("java/lang/System") && (name.equals("setOut") || name.equals("setErr") || name.equals("setIn")))
-				{				
-					super.visitFieldInsn(Opcodes.GETSTATIC, owner, name.replace("set", "").toLowerCase(), args[0].getDescriptor());
+				{
+					if( name.equals("setIn")) //....
+						super.visitFieldInsn(Opcodes.GETSTATIC, owner, "in", args[0].getDescriptor());
+					else
+						super.visitFieldInsn(Opcodes.GETSTATIC, owner, name.replace("set", "").toLowerCase(), args[0].getDescriptor());
 				}
 				else if(owner.equals("java/net/Authenticator") && name.equals("setDefault"))
 				{

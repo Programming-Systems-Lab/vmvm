@@ -18,25 +18,52 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+import edu.columbia.cs.psl.vmvm.runtime.inst.ReflectionFixingCV;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCapabilityCV;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCheckForceCV;
 
 public class VMVMClassFileTransformer implements ClassFileTransformer {
 	public static boolean isIgnoredClass(String internalName) {
+		if(isWhitelistedClass(internalName))
+			return false;
 		return internalName.startsWith("java") || internalName.startsWith("jdk") || internalName.startsWith("sun") || internalName.startsWith("com/sun") || internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
 				|| internalName.startsWith("org/junit") || internalName.startsWith("junit/") || internalName.startsWith("edu/columbia/cs/psl/vmvm/")
-				|| internalName.startsWith("org/apache/maven/surefire") || internalName.startsWith("org/apache/tools/");
+				|| internalName.startsWith("org/apache/maven/surefire") || internalName.startsWith("org/apache/tools/")
+				|| internalName.startsWith("com/jprofiler");
+	}
+	public static boolean isWhitelistedClass(String internalName)
+	{
+		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini");
+	}
+	public static boolean isClassThatNeedsReflectionHacked(String internalName)
+	{
+		return internalName.startsWith("java/io/ObjectOutputStream") || internalName.startsWith("java/io/ObjectStream");
+//		return internalName.startsWith("java/") && !internalName.startsWith("java/lang/reflect") && !internalName.equals("java/lang/Class");
 	}
 
 	public static AdditionalInterfaceClassloader cl = new AdditionalInterfaceClassloader();
 
 	public static HashMap<String, byte[]> instrumentedClasses = new HashMap<String, byte[]>();
-	public static final boolean DEBUG = false;
-
+	public static final boolean DEBUG = true;
+	public static final boolean ALWAYS_REOPT = false;
+	public static final boolean HOTSPOT_REOPT = false;
+	
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (isIgnoredClass(className))
+		if (classBeingRedefined == null && isClassThatNeedsReflectionHacked(className)) {
+			try {
+				ClassReader cr = new ClassReader(classfileBuffer);
+				ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+				ReflectionFixingCV cv = new ReflectionFixingCV(cw);
+				cr.accept(cv, 0);
+				return cw.toByteArray();
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+		}
+		if (isIgnoredClass(className)) {
 			return null;
+		}
 		if (classBeingRedefined != null) {
 			try {
 				Field field = classBeingRedefined.getDeclaredField(Constants.VMVM_NEEDS_RESET);
@@ -61,6 +88,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 						fos.write(cw.toByteArray());
 						fos.close();
 					}
+					cs.isOptimized = true;
 					cs.hasClassesToOptAway = false;
 					return cw.toByteArray();
 				}
@@ -85,10 +113,11 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 						fos.close();
 					}
 				}
+				cs.isOptimized = false;
 				return cs.fullyInstrumentedClass;
 
 			} catch (Throwable e) {
-				// TODO Auto-generated catch block
+				System.err.println("Problem when processing " + classBeingRedefined);
 				e.printStackTrace();
 			}
 
@@ -97,8 +126,8 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			return null;
 		}
 		try {
-			if(DEBUG)
-						System.err.println("VMVMClassfiletransformer PLAIN " + className);
+//			if(DEBUG)
+//						System.err.println("VMVMClassfiletransformer PLAIN " + className);
 			ClassReader cr = new ClassReader(classfileBuffer);
 
 			if(DEBUG)
@@ -140,8 +169,10 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			}
 
 			ret = cw.toByteArray();
-//			ClassReader cr2 = new ClassReader(ret);
-//			cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+			if(DEBUG){
+			ClassReader cr2 = new ClassReader(ret);
+			cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+			}
 			if (cv.getReClinitMethod() != null) {
 				//Also, generate a resetter for the interface
 				String newName = cr.getClassName() + "$$VMVMRESETTER";
@@ -168,6 +199,10 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 						fos.close();
 					}
 					byte[] b = cw.toByteArray();
+					if(DEBUG){
+						ClassReader cr2 = new ClassReader(b);
+						cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+						}
 //					System.out.println("Got resetter: " + newName);
 					cl.addClass(newName.replace("/", "."), b);
 					Class<?> c = cl.loadClass(newName.replace("/", "."));

@@ -34,12 +34,48 @@ public class StaticFinalMutibleizer extends InstructionAdapter implements Opcode
 		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner))
 			ownersOfStaticFields.add(owner);
 
-		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner) && (originalType.getSort() == Type.ARRAY || originalType.getSort() == Type.OBJECT)) {
+		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)) {
 			if (opcode == GETSTATIC) {
 				super.visitFieldInsn(opcode, owner, name, Type.getDescriptor(MutableInstance.class));
 				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;", false);
-				super.visitTypeInsn(CHECKCAST, originalType.getInternalName());
+				if (originalType.getSort() == Type.OBJECT || originalType.getSort() == Type.ARRAY) {
+					super.visitTypeInsn(CHECKCAST, originalType.getInternalName());
+				} else//primitive needs to be cast to the boxed type then unboxed
+				{
+					String checkCastTo = null;
+					switch (originalType.getSort()) {
+					case Type.BYTE:
+						checkCastTo = Type.getInternalName(Byte.class);
+						break;
+					case Type.BOOLEAN:
+						checkCastTo = Type.getInternalName(Boolean.class);
+						break;
+					case Type.SHORT:
+						checkCastTo = Type.getInternalName(Short.class);
+						break;
+					case Type.CHAR:
+						checkCastTo = Type.getInternalName(Character.class);
+						break;
+					case Type.INT:
+						checkCastTo = Type.getInternalName(Integer.class);
+						break;
+					case Type.FLOAT:
+						checkCastTo = Type.getInternalName(Float.class);
+						break;
+					case Type.LONG:
+						checkCastTo = Type.getInternalName(Long.class);
+						break;
+					case Type.DOUBLE:
+						checkCastTo = Type.getInternalName(Double.class);
+						break;
+					}
+					super.visitTypeInsn(CHECKCAST, checkCastTo);
+					Utils.unbox(this,originalType);
+				}
 			} else {
+				if (!(originalType.getSort() == Type.OBJECT || originalType.getSort() == Type.ARRAY)) {
+					Utils.box(this,originalType);
+				}
 				super.visitFieldInsn(GETSTATIC, owner, name, Type.getDescriptor(MutableInstance.class));
 				super.visitInsn(SWAP);
 				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "put", "(Ljava/lang/Object;)V", false);
