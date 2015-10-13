@@ -1,7 +1,6 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
@@ -18,7 +17,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
@@ -27,7 +25,6 @@ import javax.management.ObjectName;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
-import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCheckForceCV;
 
 public final class Reinitializer {

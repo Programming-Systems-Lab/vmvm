@@ -6,7 +6,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.commons.Method;
 
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;

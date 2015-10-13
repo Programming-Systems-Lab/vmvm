@@ -1,11 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-
-import javax.sound.midi.Instrument;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -17,14 +13,9 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
-import org.objectweb.asm.util.Textifier;
-
-import com.sun.org.apache.bcel.internal.util.ClassStack;
 
 import edu.columbia.cs.psl.vmvm.runtime.ClassState;
-import edu.columbia.cs.psl.vmvm.runtime.Instrumenter;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
-import edu.columbia.cs.psl.vmvm.runtime.PreMain;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 

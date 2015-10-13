@@ -8,7 +8,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import edu.columbia.cs.psl.vmvm.runtime.FieldReflectionWrapper;
 import edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
 
 public class ReflectionHackMV extends InstructionAdapter implements Opcodes {

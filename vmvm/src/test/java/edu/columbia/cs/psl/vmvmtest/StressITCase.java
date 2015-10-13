@@ -1,10 +1,5 @@
 package edu.columbia.cs.psl.vmvmtest;
 
-import static org.junit.Assert.*;
-
-import org.junit.Test;
-
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 
 public class StressITCase {
 	public static int foo = 5;

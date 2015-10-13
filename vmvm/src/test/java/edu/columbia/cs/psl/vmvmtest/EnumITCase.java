@@ -1,8 +1,6 @@
 package edu.columbia.cs.psl.vmvmtest;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
+import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
