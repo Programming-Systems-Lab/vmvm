@@ -188,7 +188,7 @@ static void updateClassCache(JNIEnv *env) {
 						char * newClass = new char[nameLen + 14];
 						strcat(newClass, (c->name + 1));
 						newClass[nameLen - 2] = '\0';
-						strcat(newClass, "$$VMVMRESETTER");
+						strcat(newClass, "$$VMVM_RESETTER");
 						jclass resetterClass =
 								(jclass) env->CallStaticObjectMethod(
 										gdata->reintializerclass,

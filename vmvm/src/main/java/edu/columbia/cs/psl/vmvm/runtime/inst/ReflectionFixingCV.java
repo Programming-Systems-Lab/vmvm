@@ -21,6 +21,6 @@ public class ReflectionFixingCV extends ClassVisitor {
 
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		return new ReflectionHackMV(mv, fixLdcClass, className);
+		return new ReflectionFixingMV(mv, fixLdcClass, className);
 	}
 }

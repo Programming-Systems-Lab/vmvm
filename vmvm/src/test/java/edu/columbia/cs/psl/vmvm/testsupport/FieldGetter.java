@@ -2,10 +2,10 @@ package edu.columbia.cs.psl.vmvm.testsupport;
 
 import java.lang.reflect.Field;
 
+import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
+import edu.columbia.cs.psl.test.vmvm.classes.IFace;
+import edu.columbia.cs.psl.test.vmvm.classes.SubClassWithAnotherSField;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
-import edu.columbia.cs.psl.vmvmtest.classes.ClassWithOneSField;
-import edu.columbia.cs.psl.vmvmtest.classes.IFace;
-import edu.columbia.cs.psl.vmvmtest.classes.SubClassWithAnotherSField;
 
 public class FieldGetter {
 	public static int getFooWithoutInit() {

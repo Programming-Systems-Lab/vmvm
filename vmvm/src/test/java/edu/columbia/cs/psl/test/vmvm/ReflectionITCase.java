@@ -1,16 +1,17 @@
-package edu.columbia.cs.psl.vmvmtest;
+package edu.columbia.cs.psl.test.vmvm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import java.lang.reflect.Field;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
-import edu.columbia.cs.psl.vmvmtest.classes.ClassWithOneSField;
 
 public class ReflectionITCase {
 	@Test
@@ -40,7 +41,7 @@ public class ReflectionITCase {
 		assertEquals(5, FieldGetter.getFooWithoutInit());
 		ClassWithOneSField.foo = 2;
 		Reinitializer.markAllClassesForReinit();
-		Class.forName("edu.columbia.cs.psl.vmvmtest.classes.ClassWithOneSField", true, ReflectionITCase.class.getClassLoader());
+		Class.forName("edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField", true, ReflectionITCase.class.getClassLoader());
 		assertEquals(5, FieldGetter.getFooWithoutInit());
 	}
 

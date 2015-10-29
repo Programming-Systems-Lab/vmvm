@@ -10,12 +10,12 @@ import org.objectweb.asm.commons.InstructionAdapter;
 
 import edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
 
-public class ReflectionHackMV extends InstructionAdapter implements Opcodes {
+public class ReflectionFixingMV extends InstructionAdapter implements Opcodes {
 
 	private boolean oldClassldcHack;
 	private String className;
 
-	public ReflectionHackMV(MethodVisitor mv, boolean oldClassldcHack, String className) {
+	public ReflectionFixingMV(MethodVisitor mv, boolean oldClassldcHack, String className) {
 		super(Opcodes.ASM5, mv);
 		this.className = className;
 		this.oldClassldcHack = oldClassldcHack;

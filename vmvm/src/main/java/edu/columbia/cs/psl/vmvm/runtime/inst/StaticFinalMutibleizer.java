@@ -12,12 +12,10 @@ import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 
 public class StaticFinalMutibleizer extends InstructionAdapter implements Opcodes {
 
-	private HashSet<String> ownersOfStaticFields;
 	private boolean skipFrames;
 
-	public StaticFinalMutibleizer(MethodVisitor mv, HashSet<String> ownersOfStaticFields, boolean skipFrames) {
+	public StaticFinalMutibleizer(MethodVisitor mv, boolean skipFrames) {
 		super(Opcodes.ASM5, mv);
-		this.ownersOfStaticFields = ownersOfStaticFields;
 		this.skipFrames = skipFrames;
 	}
 
@@ -30,10 +28,9 @@ public class StaticFinalMutibleizer extends InstructionAdapter implements Opcode
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 		Type originalType = Type.getType(desc);
-		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner))
-			ownersOfStaticFields.add(owner);
 
-		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)) {
+		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)
+				&& !name.equals(Constants.VMVM_NEEDS_RESET)) {
 			if (opcode == GETSTATIC) {
 				super.visitFieldInsn(opcode, owner, name, Type.getDescriptor(MutableInstance.class));
 				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;", false);

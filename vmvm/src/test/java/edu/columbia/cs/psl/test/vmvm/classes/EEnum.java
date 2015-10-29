@@ -1,4 +1,4 @@
-package edu.columbia.cs.psl.vmvmtest.classes;
+package edu.columbia.cs.psl.test.vmvm.classes;
 
 public enum EEnum {
 	A("a"), B("b"), C("c");

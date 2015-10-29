@@ -1,9 +1,10 @@
-package edu.columbia.cs.psl.vmvmtest;
+package edu.columbia.cs.psl.test.vmvm;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
-
+@Ignore
 public class ReoptimizeITCase {
 	@Test
 	public void testReoptimize() throws Exception {

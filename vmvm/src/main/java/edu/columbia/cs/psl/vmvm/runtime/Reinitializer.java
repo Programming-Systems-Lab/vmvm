@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
@@ -35,12 +36,73 @@ public final class Reinitializer {
 	static LinkedList<WeakReference<ClassState>> classesToReinit = new LinkedList<WeakReference<ClassState>>();
 	public static HashSet<String> classesNotYetReinitialized = new HashSet<String>();
 
+	static HashMap<String, WeakReference<ClassState>> initializedClasses = new HashMap<String, WeakReference<ClassState>>();
+
 	public static final void logMessage(String s) {
 		System.err.println(s + ": " + Thread.currentThread().getName());
 	}
 
+	/**
+	 * Called on interfaces
+	 * 
+	 * @param clazz
+	 * @param fieldName
+	 * @return
+	 */
+	public static final boolean _vmvmReinitFieldCheck(String clazz, String fieldName) {
+		if (initializedClasses.get(clazz) == null)
+			return false;
+		ClassState cs = initializedClasses.get(clazz).get();
+		if (cs == null)
+			return false;
+		return tryToReinitForFieldOnInterface(cs, fieldName);
+	}
+
+	public static final boolean tryToReinitForFieldOnInterface(ClassState cs, String fieldName) {
+		tryToReinitForField(cs, fieldName, true);
+		return false;
+	}
+	private static final boolean tryToReinitForField(ClassState cs, String fieldName, boolean lookOnThisClass) {
+		if(!cs.fullyPopulated)
+			cs.populate(initializedClasses);
+		if(lookOnThisClass)
+		{
+			for(Field f : cs.fields)
+			{
+				if(f.getName().equals(fieldName))
+				{
+					try {
+						if(cs.isInterface)
+							callReinitOnInterface(cs.name+"$$VMVM_RESETTER");
+						else
+						cs.clazz.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
+					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+						e.printStackTrace();
+					}
+					return true;
+				}
+			}
+		}
+		//First, look on parent
+		if(cs.parent != null && tryToReinitForField(cs.parent, fieldName, true))
+			return true;
+		//Now, look on all ifaces
+		for(ClassState _cs : cs.interfaces)
+		{
+			if(_cs != null)
+				if(tryToReinitForField(_cs, fieldName, true))
+					return true;
+		}
+		return false;
+	}
+		
+	public static final void tryToReinitForField(ClassState cs, String fieldName) {
+		tryToReinitForField(cs, fieldName, false);
+	}
+
 	public static final void callReinitOnInterface(String c) {
-//				System.out.println("Reinit on intfc" + c);
+		if(VMVMClassFileTransformer.DEBUG)
+			System.out.println("Reinit on intfc" + c);
 		try {
 			Class cl = lookupInterfaceClass(c);
 			cl.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
@@ -94,7 +156,7 @@ public final class Reinitializer {
 		}
 
 		for (String s : properties.keySet()) {
-//							System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
+			//							System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
 			if (properties.get(s) != null)
 				System.setProperty(s, properties.get(s));
 			else
@@ -125,7 +187,7 @@ public final class Reinitializer {
 							t.printStackTrace();
 						}
 					}
-					if(VMVMClassFileTransformer.ALWAYS_REOPT && c.isOptimized)
+					if (VMVMClassFileTransformer.ALWAYS_REOPT && c.isOptimized)
 						inst.redefineClasses(new ClassDefinition(c.clazz, c.fullyInstrumentedClass));
 					//					System.err.println("Adding checks in " + c);
 				} catch (IllegalArgumentException | NoClassDefFoundError | ClassNotFoundException | UnmodifiableClassException ex) {
@@ -165,7 +227,7 @@ public final class Reinitializer {
 
 	public static final void reopt(Class<?> c) {
 		try {
-									System.err.println("Reoptimizing " + c);
+			System.err.println("Reoptimizing " + c);
 			synchronized (c) {
 				inst.retransformClasses(c);
 				c.notifyAll();
@@ -177,19 +239,20 @@ public final class Reinitializer {
 
 	public static final void reinitCalled(ClassState c) {
 		if (VMVMClassFileTransformer.DEBUG)
-			System.out.println("REinit called " + c.clazz + " in " + Thread.currentThread().getName());
-//		if(c.getName().contains("BaseTest"))
-//			new Exception().printStackTrace();
+			System.out.println("REinit called " + c.name + " in " + Thread.currentThread().getName());
+		//		if(c.getName().contains("BaseTest"))
+		//			new Exception().printStackTrace();
 		classesNotYetReinitialized.remove(c.name);
 		classesToReinit.add(new WeakReference<ClassState>(c));
 		//		inst.redefineClasses(definitions);
 	}
 
 	public static final void clinitCalled(ClassState c) {
-				if (VMVMClassFileTransformer.DEBUG)
-						System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
-//				if(c.getName().contains("BaseTest"))
-//					new Exception().printStackTrace();
+		if (VMVMClassFileTransformer.DEBUG)
+			System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
+		//				if(c.getName().contains("BaseTest"))
+		//					new Exception().printStackTrace();
+		initializedClasses.put(c.name, new WeakReference<ClassState>(c));
 		classesToReinit.add(new WeakReference<ClassState>(c));
 		try {
 			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.name.replace(".", "/"));
@@ -826,16 +889,19 @@ public final class Reinitializer {
 			properties.put(key, System.getProperty(key));
 		return System.setProperty(key, value);
 	}
+
 	public static String logAndGetProperty(String key) {
 		String ret = System.getProperty(key);
-//System.out.println("SYs prop " + key+"="+ret);
+		//System.out.println("SYs prop " + key+"="+ret);
 		return ret;
 	}
+
 	public static String logAndGetProperty(String key, String def) {
-		String ret = System.getProperty(key,def);
-//System.out.println("SYs prop " + key+"="+ret +", def was " + def);
+		String ret = System.getProperty(key, def);
+		//System.out.println("SYs prop " + key+"="+ret +", def was " + def);
 		return ret;
 	}
+
 	public static void logAndSetProperty(Properties values) {
 		for (Object key : values.keySet()) {
 			if (!properties.containsKey(key))

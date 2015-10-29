@@ -12,10 +12,11 @@ import org.objectweb.asm.commons.LocalVariablesSorter;
 import org.objectweb.asm.tree.FrameNode;
 
 import edu.columbia.cs.psl.vmvm.runtime.ClassState;
+import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 
-public class ReinitForceMV extends MethodVisitor {
+public class ReinitCheckForceMV extends MethodVisitor {
 	private AnalyzerAdapter an;
 	private boolean isStaticMethod;
 	private String owner;
@@ -25,7 +26,7 @@ public class ReinitForceMV extends MethodVisitor {
 	private boolean doOpt;
 	private boolean hasAnyChecks;
 
-	public ReinitForceMV(MethodVisitor mv, AnalyzerAdapter analyzer, String owner, String name, boolean isStaticMethod, boolean needOldLdc, boolean skipFrames, boolean doOpt) {
+	public ReinitCheckForceMV(MethodVisitor mv, AnalyzerAdapter analyzer, String owner, String name, boolean isStaticMethod, boolean needOldLdc, boolean skipFrames, boolean doOpt) {
 		super(Opcodes.ASM5, mv);
 		this.isStaticMethod = isStaticMethod;
 		this.owner = owner;
@@ -76,50 +77,37 @@ public class ReinitForceMV extends MethodVisitor {
 
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-
-		if ((opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner) && !owner.equals(this.owner)
-
+		
+		if ((opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner) //&& !owner.equals(this.owner)
+				&& !name.equals(Constants.VMVM_NEEDS_RESET)
+						&& !desc.equals("L"+MutableInstance.INTERNAL_NAME+";")
+						&& !name.equals("$$VMVM_RESETTER")
+						&& !name.equals(Constants.VMVM_RESET_IN_PROGRESS)
 		&& (!doOpt || Reinitializer.classesNotYetReinitialized.contains(owner.replace("/", ".")))) {
 			hasAnyChecks = true;
-			Label checkLocalCache = new Label();
-			FrameNode fn = getCurrentFrame();
-			super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			super.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
-			super.visitJumpInsn(Opcodes.IFEQ, checkLocalCache);
-			//does need reset right now
-			super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			super.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "isInterface", "Z");
-			Label regularReinit = new Label();
-			super.visitJumpInsn(Opcodes.IFEQ, regularReinit);
-			super.visitLdcInsn(owner.replace("/", ".") + "$$VMVMRESETTER");
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "callReinitOnInterface", "(Ljava/lang/String;)V", false);
-			super.visitJumpInsn(Opcodes.GOTO, checkLocalCache);
-			super.visitLabel(regularReinit);
-			if (!skipFrames)
-				fn.accept(this);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, owner, "__vmvmReClinit", "()V", false);
-			super.visitLabel(checkLocalCache);
-			//need frame
-			if (!skipFrames)
-				fn.accept(this);
-			if (VMVMClassFileTransformer.ALWAYS_REOPT) {
-				super.visitFieldInsn(Opcodes.GETSTATIC, this.owner, owner.replace("/", "_") + Constants.TOTAL_STATIC_CLASSES_CHECKED, "Z");
-				Label allDone = new Label();
-				super.visitJumpInsn(Opcodes.IFNE, allDone);
-				super.visitInsn(Opcodes.ICONST_1);
-				super.visitFieldInsn(Opcodes.PUTSTATIC, this.owner, owner.replace("/", "_") + Constants.TOTAL_STATIC_CLASSES_CHECKED, "Z");
-				super.visitFieldInsn(Opcodes.GETSTATIC, this.owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-
-				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, ClassState.INTERNAL_NAME, "addClassToOptAway", "()V", false);
-				super.visitInsn(Opcodes.ICONST_1);
-				super.visitVarInsn(Opcodes.ISTORE, tmpLVidx);
-
-				super.visitLabel(allDone);
-				if (!skipFrames)
-					fn.accept(this);
+			if(opcode == Opcodes.GETSTATIC)
+			{
+				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_SUFFIX, "L"+owner+Constants.VMVM_RESET_SUFFIX+";");
+				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner+Constants.VMVM_RESET_SUFFIX, "get"+name, "()"+desc, false);
+			}
+			else
+			{
+				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_SUFFIX, "L"+owner+Constants.VMVM_RESET_SUFFIX+";");
+				Type t = Type.getType(desc);
+				if(t.getSize() == 1)
+				{
+					super.visitInsn(Opcodes.SWAP);
+				}
+				else
+				{
+					super.visitInsn(Opcodes.DUP_X2);
+					super.visitInsn(Opcodes.POP);
+				}
+				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner+Constants.VMVM_RESET_SUFFIX, "set"+name, "("+desc+")V", false);
 			}
 		}
-		super.visitFieldInsn(opcode, owner, name, desc);
+		else
+			super.visitFieldInsn(opcode, owner, name, desc);
 	}
 
 	@Override
@@ -166,7 +154,7 @@ public class ReinitForceMV extends MethodVisitor {
 			super.visitInsn(Opcodes.ICONST_0);
 			super.visitVarInsn(Opcodes.ISTORE, tmpLVidx);
 		}
-		if ((name.equals("<init>") || (isStaticMethod && !(name.equals("<clinit>") || name.equals("__vmvmReClinit")))) && !doOpt) {
+		if ((name.equals("<init>") || (isStaticMethod && !(name.equals("<clinit>") || name.equals("__vmvmReClinit") || name.equals("_vmvmReinitFieldCheck")))) && !doOpt) {
 			Label ok = new Label();
 			FrameNode fn = getCurrentFrame();
 			super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);

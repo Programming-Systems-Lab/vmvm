@@ -1,4 +1,4 @@
-package edu.columbia.cs.psl.vmvmtest.classes;
+package edu.columbia.cs.psl.test.vmvm.classes;
 
 public class ClassWithOneSField implements IFace {
 	public static int foo = 5;

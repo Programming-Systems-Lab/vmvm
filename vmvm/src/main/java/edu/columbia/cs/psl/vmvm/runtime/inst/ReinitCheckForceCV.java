@@ -36,9 +36,9 @@ public class ReinitCheckForceCV extends ClassVisitor {
 	
 		if (!isInterface) {
 			AnalyzerAdapter an = new AnalyzerAdapter(className, access, name, desc, mv);
-			mv = new ReinitForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames, doOpt);
+			mv = new ReinitCheckForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames, doOpt);
 			LocalVariablesSorter lvs = new LocalVariablesSorter(access, desc, mv);
-			((ReinitForceMV)mv).setLVS(lvs);
+			((ReinitCheckForceMV)mv).setLVS(lvs);
 			mv = lvs;
 		}
 		return mv;

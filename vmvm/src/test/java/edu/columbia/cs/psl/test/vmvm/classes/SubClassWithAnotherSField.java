@@ -1,4 +1,4 @@
-package edu.columbia.cs.psl.vmvmtest.classes;
+package edu.columbia.cs.psl.test.vmvm.classes;
 
 public class SubClassWithAnotherSField extends ClassWithOneSField {
 	public static int bar = 4;

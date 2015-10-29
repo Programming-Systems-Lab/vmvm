@@ -1,4 +1,4 @@
-package edu.columbia.cs.psl.vmvmtest;
+package edu.columbia.cs.psl.test.vmvm;
 
 public class OtherClass {
 	public static int foo = 5;

@@ -15,10 +15,10 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		Method[] ret = new Method[r.length - 1];
+		Method[] ret = new Method[r.length - 2];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit"))
+			if (r[i].getName().equals("__vmvmReClinit") || r[i].getName().equals("_vmvmReinitFieldCheck"))
 				continue;
 			ret[j] = r[i];
 			j++;
@@ -38,10 +38,10 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		Method[] ret = new Method[r.length - 1];
+		Method[] ret = new Method[r.length - 2];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit"))
+			if (r[i].getName().equals("__vmvmReClinit") || r[i].getName().equals("_vmvmReinitFieldCheck"))
 				continue;
 			ret[j] = r[i];
 			j++;
