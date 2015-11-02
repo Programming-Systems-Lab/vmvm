@@ -130,10 +130,10 @@ public class ClassReinitCV extends ClassVisitor {
 		mv = new SystemPropertyLogger(mv);
 //		if(isInterface)
 //			mv = new StaticFinalMutibleizer(mv, skipFrames);
-		mv = new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions);
 		mv = new ReflectionFixingMV(mv, fixLdcClass, className);
 		AnalyzerAdapter an = new AnalyzerAdapter(className, access, name, desc, mv);
 		mv = new ReinitCheckForceMV(an, an, className, name, (access & Opcodes.ACC_STATIC) != 0, fixLdcClass, skipFrames);
+		mv = new JSRInlinerAdapter(mv, access, name, desc, signature, exceptions);
 
 		return mv;
 	}
