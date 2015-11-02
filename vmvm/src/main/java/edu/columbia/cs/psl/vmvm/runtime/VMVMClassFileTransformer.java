@@ -20,9 +20,9 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
+import edu.columbia.cs.psl.vmvm.runtime.inst.ClassReinitCV;
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReflectionFixingCV;
-import edu.columbia.cs.psl.vmvm.runtime.inst.ClassReinitCV;
 import edu.columbia.cs.psl.vmvm.runtime.inst.StaticFinalMutibleizer;
 
 public class VMVMClassFileTransformer implements ClassFileTransformer {

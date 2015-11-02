@@ -8,7 +8,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AnalyzerAdapter;
-import org.objectweb.asm.commons.LocalVariablesSorter;
 import org.objectweb.asm.tree.FrameNode;
 
 import edu.columbia.cs.psl.vmvm.runtime.ClassState;

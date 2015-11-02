@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;

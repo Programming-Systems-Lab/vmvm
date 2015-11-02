@@ -1,10 +1,10 @@
 package edu.columbia.cs.psl.test.vmvm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.lang.reflect.Field;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithNoInterfaces;

@@ -2,7 +2,6 @@ package edu.columbia.cs.psl.test.vmvm;
 
 import static org.junit.Assert.assertNull;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;

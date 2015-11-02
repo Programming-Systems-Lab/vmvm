@@ -4,7 +4,6 @@ import static org.junit.Assert.assertSame;
 
 import java.util.Locale;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
