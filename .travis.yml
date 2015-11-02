@@ -4,6 +4,6 @@ jdk: oraclejdk8
 script: "mvn verify"
 after_success:
   - echo "<settings><servers><server><id>psl.internal</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml
-  - mvn deploy --settings ~/settings.xml
-  - curl -T vmvm-ant-junit-formatter/target/vmvm-ant-junit-formatter-2.0.0-SNAPSHOT.jar -u \${env.FTP_USER}:\${env.FTP_PASS} ftp://jonbell.net/vmvm/ant-mvn-formatter.jar
-  - curl -T vmvm/target/vmvm-2.0.0-SNAPSHOT.jar -u \${env.FTP_USER}:\${env.FTP_PASS} ftp://jonbell.net/vmvm/vmvm.jar
+  - mvn -DskipTests=true deploy --settings ~/settings.xml
+  - curl -T vmvm-ant-junit-formatter/target/vmvm-ant-junit-formatter-2.0.0-SNAPSHOT.jar -u $FTP_USER:$FTP_PASS ftp://jonbell.net/vmvm/ant-mvn-formatter.jar
+  - curl -T vmvm/target/vmvm-2.0.0-SNAPSHOT.jar -u \$FTP_USER:\$FTP_PASS ftp://jonbell.net/vmvm/vmvm.jar
