@@ -6,7 +6,7 @@ This repository contains the source and a [runnable binary](http://jonbell.net/v
 
 
 ###For more information
-Please refer to our [ICSE '14 Paper](http://jonbell.net/publications/vmvm) or email [Jonathan Bell](mailto:jbell@cs.columbia.edu). Note that this new version of VMVM (VMVM 2) is somewhat different in architecture than described in our publication: we have removed the need for the pre-instrumentation phase, which makes using it in practice significantly easier.
+Please refer to our [ICSE '14 Paper](http://jonbell.net/publications/vmvm) or email [Jonathan Bell](mailto:jbell@cs.columbia.edu). Note that this new version of VMVM (VMVM 2) is somewhat different in architecture than described in our publication: we have removed the need for the pre-instrumentation phase, which makes using it in practice significantly easier. VMVM 2 requires you to use a Java 8 JRE (or newer) when running tests (but is compatible with older code).
 
 Running
 -----
