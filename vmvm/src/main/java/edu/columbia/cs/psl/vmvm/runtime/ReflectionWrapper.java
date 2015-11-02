@@ -5,25 +5,26 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz) {
 		Method[] r = clazz.getDeclaredMethods();
-//		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
-//			return r;
-//		if(clazz.isInterface() || r.length == 0)
-//			return r;
-//		Method[] ret = new Method[r.length - 1];
-//		int j = 0;
-//		for (int i = 0; i < r.length; i++) {
-//			if (r[i].getName().equals("__vmvmReClinit"))
-//				continue;
-//			ret[j] = r[i];
-//			j++;
-//		}
-		return r;
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+			return r;
+		if(clazz.isInterface() || r.length == 0)
+			return r;
+		Method[] ret = new Method[r.length - 1];
+		int j = 0;
+		for (int i = 0; i < r.length; i++) {
+			if (r[i].getName().equals("__vmvmReClinit"))
+				continue;
+			ret[j] = r[i];
+			j++;
+		}
+		return ret;
 	}
 	public static Class[] getInterfaces(Class<?> clazz) {
 		Class[] ret = clazz.getInterfaces();
@@ -44,19 +45,19 @@ public class ReflectionWrapper {
 	}
 	public static Method[] getMethods(Class<?> clazz) {
 		Method[] r = clazz.getMethods();
-//		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
-//			return r;
-//		if(clazz.isInterface() || r.length == 0)
-//			return r;
-//		Method[] ret = new Method[r.length - 1];
-//		int j = 0;
-//		for (int i = 0; i < r.length; i++) {
-//			if (r[i].getName().equals("__vmvmReClinit"))
-//				continue;
-//			ret[j] = r[i];
-//			j++;
-//		}
-		return r;
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+			return r;
+		if(clazz.isInterface() || r.length == 0)
+			return r;
+		Method[] ret = new Method[r.length - 1];
+		int j = 0;
+		for (int i = 0; i < r.length; i++) {
+			if (r[i].getName().equals("__vmvmReClinit"))
+				continue;
+			ret[j] = r[i];
+			j++;
+		}
+		return ret;
 	}
 
 	public static void set(Field f, Object owner, Object val) throws IllegalArgumentException, IllegalAccessException {

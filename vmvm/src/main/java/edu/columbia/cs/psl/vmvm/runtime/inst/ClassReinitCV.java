@@ -30,12 +30,16 @@ public class ClassReinitCV extends ClassVisitor {
 	private boolean isInterface;
 	private String className;
 	private boolean skipFrames;
-	private LinkedList<FieldNode> mutabilizedFields = new LinkedList<FieldNode>();
+	private LinkedList<FieldNode> allFields = new LinkedList<FieldNode>();
+	private HashSet<String> finalFields = new HashSet<String>();
 	private boolean fixLdcClass;
 	private boolean isEnum;
 
-	public LinkedList<FieldNode> getMutabilizedFields() {
-		return mutabilizedFields;
+	public HashSet<String> getFinalFields() {
+		return finalFields;
+	}
+	public LinkedList<FieldNode> getAllFields() {
+		return allFields;
 	}
 	public MethodNode getReClinitMethod() {
 		return reClinitMethod;
@@ -65,10 +69,15 @@ public class ClassReinitCV extends ClassVisitor {
 			access = access & ~Opcodes.ACC_PRIVATE;
 			access = access & ~Opcodes.ACC_PROTECTED;
 			access = access | Opcodes.ACC_PUBLIC;
-			mutabilizedFields.add(new FieldNode(access, name, desc, signature, value));
-			value = null;
-			desc = MutableInstance.DESC;
-			signature = MutableInstance.DESC;
+			if(!isInterface)
+				access = access & ~Opcodes.ACC_FINAL;
+			allFields.add(new FieldNode(access, name, desc, signature, value));
+			if ((access & Opcodes.ACC_FINAL) != 0) {
+				finalFields.add(name);
+				value = null;
+				desc = MutableInstance.DESC;
+				signature = MutableInstance.DESC;
+			}
 		}
 		return super.visitField(access, name, desc, signature, value);
 	}
@@ -178,33 +187,34 @@ public class ClassReinitCV extends ClassVisitor {
 		if (!VMVMClassFileTransformer.isIgnoredClass(superName))
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, superName+Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 
-		for (FieldNode fn : mutabilizedFields) {
-			mv.visitTypeInsn(Opcodes.NEW, MutableInstance.INTERNAL_NAME);
-			mv.visitInsn(Opcodes.DUP);
-			if (fn.desc.length() == 1) {
-				mv.visitInsn(Opcodes.ACONST_NULL);
-			} else {
-				if (fixLdcClass) {
-					Type t = Type.getType(fn.desc);
-					mv.visitLdcInsn(t.getInternalName().replace("/", "."));
-					mv.visitInsn(Opcodes.ICONST_0);
-					mv.visitLdcInsn(className.replace("/", "."));
-					mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
-					mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
-					mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
+		for (FieldNode fn : allFields) {
+			if ((fn.access & Opcodes.ACC_FINAL) != 0) {
+				mv.visitTypeInsn(Opcodes.NEW, MutableInstance.INTERNAL_NAME);
+				mv.visitInsn(Opcodes.DUP);
+				if (fn.desc.length() == 1) {
+					mv.visitInsn(Opcodes.ACONST_NULL);
+				} else {
+					if (fixLdcClass) {
+						Type t = Type.getType(fn.desc);
+						mv.visitLdcInsn(t.getInternalName().replace("/", "."));
+						mv.visitInsn(Opcodes.ICONST_0);
+						mv.visitLdcInsn(className.replace("/", "."));
+						mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
+						mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+						mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
+					} else
+						mv.visitLdcInsn(Type.getType(fn.desc));
+				}
+				if (fn.value != null) {
+					mv.visitLdcInsn(fn.value);
+					if (fn.desc.length() == 1)
+						Utils.box(mv, Type.getType(fn.desc));
+					mv.visitMethodInsn(Opcodes.INVOKESPECIAL, MutableInstance.INTERNAL_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/Object;)V", false);
 				} else
-					mv.visitLdcInsn(Type.getType(fn.desc));
+					mv.visitMethodInsn(Opcodes.INVOKESPECIAL, MutableInstance.INTERNAL_NAME, "<init>", "(Ljava/lang/Class;)V", false);
+				mv.visitFieldInsn(Opcodes.PUTSTATIC, className, fn.name, MutableInstance.DESC);
 			}
-			if (fn.value != null) {
-				mv.visitLdcInsn(fn.value);
-				if (fn.desc.length() == 1)
-					Utils.box(mv, Type.getType(fn.desc));
-				mv.visitMethodInsn(Opcodes.INVOKESPECIAL, MutableInstance.INTERNAL_NAME, "<init>", "(Ljava/lang/Class;Ljava/lang/Object;)V", false);
-			} else
-				mv.visitMethodInsn(Opcodes.INVOKESPECIAL, MutableInstance.INTERNAL_NAME, "<init>", "(Ljava/lang/Class;)V", false);
-			mv.visitFieldInsn(Opcodes.PUTSTATIC, className, fn.name, MutableInstance.DESC);
 		}
-
 		if (clinitMethod != null) {
 			if (clinitMethod.maxStack < 6)
 				clinitMethod.maxStack = 6;
@@ -215,9 +225,12 @@ public class ClassReinitCV extends ClassVisitor {
 			mv.visitEnd();
 		}
 
-		reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
-		mv = reClinitMethod;
-
+		if (isInterface) {
+			reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+			mv = reClinitMethod;
+		} else
+			mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+		
 		final Label finishedClinitCode = new Label();
 		LabelRemappingMV reLabeler = new LabelRemappingMV(mv, finishedClinitCode);
 		mv.visitCode();
@@ -298,8 +311,8 @@ public class ClassReinitCV extends ClassVisitor {
 			mv.visitInsn(Opcodes.ICONST_0);
 			mv.visitFieldInsn(Opcodes.PUTSTATIC, classNameWField, s.replace("/", "_") + Constants.TOTAL_STATIC_CLASSES_CHECKED, "Z");
 		}
-		for (FieldNode fn : mutabilizedFields) {
-			if (fn.value != null) {
+		for (FieldNode fn : allFields) {
+			if (fn.value != null && (fn.access & Opcodes.ACC_FINAL) != 0) {
 				mv.visitFieldInsn(Opcodes.GETSTATIC, className, fn.name, MutableInstance.DESC);
 				mv.visitLdcInsn(fn.value);
 				if (fn.desc.length() == 1)

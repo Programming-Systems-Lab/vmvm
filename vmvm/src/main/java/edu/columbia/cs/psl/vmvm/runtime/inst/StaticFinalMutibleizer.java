@@ -1,5 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
+import java.util.HashSet;
+
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -11,10 +13,11 @@ import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 public class StaticFinalMutibleizer extends InstructionAdapter implements Opcodes {
 
 	private boolean skipFrames;
-
-	public StaticFinalMutibleizer(MethodVisitor mv, boolean skipFrames) {
+	private HashSet<String> finalFields;
+	public StaticFinalMutibleizer(MethodVisitor mv, HashSet<String> finalFields, boolean skipFrames) {
 		super(Opcodes.ASM5, mv);
 		this.skipFrames = skipFrames;
+		this.finalFields = finalFields;
 	}
 
 	@Override
@@ -28,7 +31,7 @@ public class StaticFinalMutibleizer extends InstructionAdapter implements Opcode
 		Type originalType = Type.getType(desc);
 
 		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)
-				&& !name.equals(Constants.VMVM_NEEDS_RESET)) {
+				&& !name.equals(Constants.VMVM_NEEDS_RESET) && finalFields.contains(name)) {
 			if (opcode == GETSTATIC) {
 				super.visitFieldInsn(opcode, owner, name, Type.getDescriptor(MutableInstance.class));
 				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;", false);

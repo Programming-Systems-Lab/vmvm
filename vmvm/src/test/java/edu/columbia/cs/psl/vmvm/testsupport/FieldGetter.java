@@ -11,7 +11,7 @@ public class FieldGetter {
 	public static int getFooWithoutInit() {
 		try {
 			Field f = ClassWithOneSField.class.getDeclaredField("foo");
-			return (Integer) ((MutableInstance) f.get(null)).get();
+			return f.getInt(null);
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
@@ -21,7 +21,7 @@ public class FieldGetter {
 	public static int getBarWithoutInit() {
 	       try {
 	            Field f = SubClassWithAnotherSField.class.getDeclaredField("bar");
-	            return (Integer) ((MutableInstance) f.get(null)).get();
+				return f.getInt(null);
 	        } catch (Throwable t) {
 	            t.printStackTrace();
 	        }
@@ -31,7 +31,7 @@ public class FieldGetter {
 	public static ClassWithOneSField getInstWithoutInit() {
 		try {
 			Field f = IFace.class.getDeclaredField("inst");
-			return (ClassWithOneSField) ((MutableInstance) f.get(null)).get();
+			return (ClassWithOneSField) f.get(null);
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}

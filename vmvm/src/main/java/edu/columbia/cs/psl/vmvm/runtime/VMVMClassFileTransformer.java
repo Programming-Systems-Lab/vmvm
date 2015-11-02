@@ -125,21 +125,30 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 
 			if (cv.getReClinitMethod() != null)
 				cv.getReClinitMethod().accept(cw);
+			else
 			{
-				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+				//Generate a reclinit method that just calls the one on the actual class :/
+				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC|Opcodes.ACC_STATIC, "__vmvmReClinit", "()V", null,null);
 				mv.visitCode();
-				mv.visitVarInsn(Opcodes.ALOAD, 0);
-				if (!isIgnoredClass(cr.getSuperName()))
-					mv.visitMethodInsn(Opcodes.INVOKESPECIAL, cr.getSuperName() + Constants.VMVM_RESET_SUFFIX, "<init>", "()V", false);
-				else
-					mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, cr.getClassName(), "__vmvmReClinit", "()V", false);
 				mv.visitInsn(Opcodes.RETURN);
 				mv.visitMaxs(0, 0);
 				mv.visitEnd();
 			}
-			for (FieldNode fn : cv.getMutabilizedFields()) {
-				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "get" + fn.name, "()" + fn.desc, null, null);
-				mv = new StaticFinalMutibleizer(mv, false);
+			MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+			mv.visitCode();
+			mv.visitVarInsn(Opcodes.ALOAD, 0);
+			if (!isIgnoredClass(cr.getSuperName()))
+				mv.visitMethodInsn(Opcodes.INVOKESPECIAL, cr.getSuperName() + Constants.VMVM_RESET_SUFFIX, "<init>", "()V", false);
+			else
+				mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+			mv.visitInsn(Opcodes.RETURN);
+			mv.visitMaxs(0, 0);
+			mv.visitEnd();
+
+			for (FieldNode fn : cv.getAllFields()) {
+				mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "get" + fn.name, "()" + fn.desc, null, null);
+				mv = new StaticFinalMutibleizer(mv, cv.getFinalFields(), false);
 				mv.visitCode();
 				Label ok = new Label();
 				mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
@@ -180,7 +189,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				mv.visitEnd();
 
 				mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "set" + fn.name, "(" + fn.desc + ")V", null, null);
-				mv = new StaticFinalMutibleizer(mv, false);
+				mv = new StaticFinalMutibleizer(mv, cv.getFinalFields(), false);
 				mv.visitCode();
 
 				ok = new Label();
@@ -286,9 +295,9 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC | Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT, newName, null, "java/lang/Object", null);
 		cw.visitSource(null, null);
 
-		for (FieldNode fn : cv.getMutabilizedFields()) {
+		for (FieldNode fn : cv.getAllFields()) {
 			MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "get" + fn.name, "()" + fn.desc, null, null);
-			mv = new StaticFinalMutibleizer(mv, false);
+			mv = new StaticFinalMutibleizer(mv, cv.getFinalFields(), false);
 			mv.visitCode();
 			Label ok = new Label();
 			mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
@@ -328,7 +337,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			mv.visitEnd();
 
 			mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "set" + fn.name, "(" + fn.desc + ")V", null, null);
-			mv = new StaticFinalMutibleizer(mv, false);
+			mv = new StaticFinalMutibleizer(mv,cv.getFinalFields(),  false);
 			mv.visitCode();
 
 			ok = new Label();
