@@ -10,7 +10,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 import org.objectweb.asm.tree.FrameNode;
 
-import edu.columbia.cs.psl.vmvm.runtime.ClassState;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
@@ -22,7 +21,6 @@ public class ReinitCheckForceMV extends MethodVisitor {
 	private boolean needOldLdc;
 	private String name;
 	private boolean skipFrames;
-	private boolean hasAnyChecks;
 	private boolean doOpt = false;
 	public ReinitCheckForceMV(MethodVisitor mv, AnalyzerAdapter analyzer, String owner, String name, boolean isStaticMethod, boolean needOldLdc, boolean skipFrames) {
 		super(Opcodes.ASM5, mv);
@@ -79,9 +77,7 @@ public class ReinitCheckForceMV extends MethodVisitor {
 				&& !name.equals(Constants.VMVM_NEEDS_RESET)
 						&& !desc.equals("L"+MutableInstance.INTERNAL_NAME+";")
 						&& !name.equals("$$VMVM_RESETTER")
-						&& !name.equals(Constants.VMVM_RESET_IN_PROGRESS)
-		&& (!doOpt || Reinitializer.classesNotYetReinitialized.contains(owner.replace("/", ".")))) {
-			hasAnyChecks = true;
+						&& !name.equals(Constants.VMVM_RESET_IN_PROGRESS)) {
 			if(opcode == Opcodes.GETSTATIC)
 			{
 				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_SUFFIX, "L"+owner+Constants.VMVM_RESET_SUFFIX+";");
@@ -107,41 +103,6 @@ public class ReinitCheckForceMV extends MethodVisitor {
 			super.visitFieldInsn(opcode, owner, name, desc);
 	}
 
-	@Override
-	public void visitInsn(int opcode) {
-		if (hasAnyChecks && !name.equals("<clinit>") && !name.equals("__vmvmReClinit"))
-			switch (opcode) {
-			case Opcodes.RETURN:
-			case Opcodes.IRETURN:
-			case Opcodes.FRETURN:
-			case Opcodes.ARETURN:
-			case Opcodes.LRETURN:
-			case Opcodes.DRETURN:
-				if (VMVMClassFileTransformer.ALWAYS_REOPT) {
-					FrameNode fn = getCurrentFrame();
-					super.visitVarInsn(Opcodes.ILOAD, tmpLVidx);
-					Label done = new Label();
-					super.visitJumpInsn(Opcodes.IFEQ, done);
-					if (needOldLdc) {
-						super.visitLdcInsn(this.owner.replace("/", "."));
-						super.visitInsn(Opcodes.ICONST_0);
-						super.visitLdcInsn(this.owner.replace("/", "."));
-						super.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
-						super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
-						super.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
-					} else
-						super.visitLdcInsn(Type.getObjectType(this.owner));
-					super.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "reopt", "(Ljava/lang/Class;)V", false);
-					super.visitLabel(done);
-					if (!skipFrames)
-						fn.accept(this);
-				}
-				break;
-			}
-		super.visitInsn(opcode);
-	}
-
-	int tmpLVidx;
 
 	@Override
 	public void visitCode() {
@@ -150,19 +111,10 @@ public class ReinitCheckForceMV extends MethodVisitor {
 		if ((name.equals("<init>") || (isStaticMethod && !(name.equals("<clinit>") || name.equals("__vmvmReClinit") || name.equals("_vmvmReinitFieldCheck")))) && !doOpt) {
 			Label ok = new Label();
 			FrameNode fn = getCurrentFrame();
-			super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			if (owner.equals("org/apache/log4j/Level")) { //XXX todo why was this necessary on nutch!?
-				super.visitJumpInsn(Opcodes.IFNULL, ok);
-				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			}
-			super.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+			super.visitFieldInsn(Opcodes.GETSTATIC, owner+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
+
 			super.visitJumpInsn(Opcodes.IFEQ, ok);
-			if (VMVMClassFileTransformer.ALWAYS_REOPT) {
-				hasAnyChecks = true;
-				super.visitInsn(Opcodes.ICONST_1);
-				super.visitVarInsn(Opcodes.ISTORE, tmpLVidx);
-			}
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, owner, "__vmvmReClinit", "()V", false);
+			super.visitMethodInsn(Opcodes.INVOKESTATIC, owner+Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 			super.visitLabel(ok);
 			if (!skipFrames) {
 				fn.accept(this);

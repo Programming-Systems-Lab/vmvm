@@ -74,6 +74,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 
 		try {
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+			cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.VMVM_NEEDS_RESET, "Z", null, null);
 			ArrayList<String> interfaces = new ArrayList<String>();
 			for (String s : cr.getInterfaces()) {
 				if (!isIgnoredClass(s)) {
@@ -141,13 +142,10 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				mv = new StaticFinalMutibleizer(mv, false);
 				mv.visitCode();
 				Label ok = new Label();
-				mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-				mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+				mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 				mv.visitJumpInsn(Opcodes.IFEQ, ok);
-				if ((cr.getAccess() & Opcodes.ACC_INTERFACE) != 0)
-					mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
-				else
-					mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, "__vmvmReClinit", "()V", false);
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
+
 				mv.visitLabel(ok);
 				Type t = Type.getType(fn.desc);
 
@@ -186,14 +184,9 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				mv.visitCode();
 
 				ok = new Label();
-				mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-				//					if (className.equals("org/apache/log4j/Level")) { //XXX todo why was this necessary on nutch!?
-				//						super.visitJumpInsn(Opcodes.IFNULL, ok);
-				//						super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-				//					}
-				mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+				mv.visitFieldInsn(Opcodes.GETSTATIC, className + Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 				mv.visitJumpInsn(Opcodes.IFEQ, ok);
-				mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, "__vmvmReClinit", "()V", false);
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 				mv.visitLabel(ok);
 //				mv.visitFrame(Opcodes.F_SAME, 0, new Object[0], 0, new Object[0]);
 
@@ -298,13 +291,9 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			mv = new StaticFinalMutibleizer(mv, false);
 			mv.visitCode();
 			Label ok = new Label();
-			mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+			mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 			mv.visitJumpInsn(Opcodes.IFEQ, ok);
-			if ((cr.getAccess() & Opcodes.ACC_INTERFACE) != 0)
-				mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
-			else
-				mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, "__vmvmReClinit", "()V", false);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 			mv.visitLabel(ok);
 			Type t = Type.getType(fn.desc);
 
@@ -343,14 +332,9 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			mv.visitCode();
 
 			ok = new Label();
-			mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			//			if (className.equals("org/apache/log4j/Level")) { //XXX todo why was this necessary on nutch!?
-			//				super.visitJumpInsn(Opcodes.IFNULL, ok);
-			//				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-			//			}
-			mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+			mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 			mv.visitJumpInsn(Opcodes.IFEQ, ok);
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, className, "__vmvmReClinit", "()V", false);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, className+Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 			mv.visitLabel(ok);
 
 			switch (t.getSort()) {

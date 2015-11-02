@@ -16,7 +16,6 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
-import edu.columbia.cs.psl.vmvm.runtime.ClassState;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
@@ -144,7 +143,7 @@ public class ClassReinitCV extends ClassVisitor {
 		if (isInterface)
 			classNameWField = className + "$$VMVM_RESETTER";
 
-		super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, Constants.VMVM_NEEDS_RESET, ClassState.DESC, null, null);
+
 //		if(mutabilizedFields.size() > 0)
 		super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, Constants.VMVM_RESET_SUFFIX, "L"+className+Constants.VMVM_RESET_SUFFIX+";", null, null);
 
@@ -164,38 +163,20 @@ public class ClassReinitCV extends ClassVisitor {
 		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className + Constants.VMVM_RESET_SUFFIX, "<init>", "()V", false);
 		mv.visitFieldInsn(Opcodes.PUTSTATIC, className, Constants.VMVM_RESET_SUFFIX, "L" + className + Constants.VMVM_RESET_SUFFIX + ";");
 
-		mv.visitTypeInsn(Opcodes.NEW, ClassState.INTERNAL_NAME);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitInsn(Opcodes.DUP);
+		
 		if (fixLdcClass) {
-			mv.visitLdcInsn(className.replace("/", "."));
+			mv.visitLdcInsn(className.replace("/", ".") + Constants.VMVM_RESET_SUFFIX);
 			mv.visitInsn(Opcodes.ICONST_0);
-			mv.visitLdcInsn(className.replace("/", "."));
+			mv.visitLdcInsn(className.replace("/", ".") + Constants.VMVM_RESET_SUFFIX);
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
 		} else
-			mv.visitLdcInsn(Type.getObjectType(className));
-		mv.visitIntInsn(Opcodes.BIPUSH, interfaces.length);
-		mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String");
-		for (int i = 0; i < interfaces.length; i++) {
-			mv.visitInsn(Opcodes.DUP);
-			mv.visitIntInsn(Opcodes.BIPUSH, i);
-			mv.visitLdcInsn(interfaces[i].replace("/", "."));
-			mv.visitInsn(Opcodes.AASTORE);
-		}
-		mv.visitLdcInsn(superName.replace("/", "."));
-		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, ClassState.INTERNAL_NAME, "<init>", "(Ljava/lang/Class;[Ljava/lang/String;Ljava/lang/String;)V", false);
-		if (isInterface) {
-			mv.visitInsn(Opcodes.DUP);
-			mv.visitInsn(Opcodes.ICONST_1);
-			mv.visitFieldInsn(Opcodes.PUTFIELD, ClassState.INTERNAL_NAME, "isInterface", "Z");
-		}
-		mv.visitFieldInsn(Opcodes.PUTSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "clinitCalled", "(" + ClassState.DESC + ")V", false);
+			mv.visitLdcInsn(Type.getObjectType(className + Constants.VMVM_RESET_SUFFIX));
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "clinitCalled", "(Ljava/lang/Class;)V", false);
 
 		if (!VMVMClassFileTransformer.isIgnoredClass(superName))
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, superName, "__vmvmReClinit", "()V", false);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, superName+Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 
 		for (FieldNode fn : mutabilizedFields) {
 			mv.visitTypeInsn(Opcodes.NEW, MutableInstance.INTERNAL_NAME);
@@ -234,11 +215,9 @@ public class ClassReinitCV extends ClassVisitor {
 			mv.visitEnd();
 		}
 
-		if (isInterface) {
-			reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
-			mv = reClinitMethod;
-		} else
-			mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+		reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+		mv = reClinitMethod;
+
 		final Label finishedClinitCode = new Label();
 		LabelRemappingMV reLabeler = new LabelRemappingMV(mv, finishedClinitCode);
 		mv.visitCode();
@@ -261,8 +240,7 @@ public class ClassReinitCV extends ClassVisitor {
 		//			super.visitLdcInsn("clinit going to check "+clazz+" > in " + cv.getClassName());
 		//		super.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
 		//		}		
-		mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-		mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+		mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 		mv.visitJumpInsn(Opcodes.IFEQ, allDone);
 		if (fixLdcClass) {
 			mv.visitLdcInsn(classNameWField.replace("/", "."));
@@ -293,14 +271,13 @@ public class ClassReinitCV extends ClassVisitor {
 		mv.visitLabel(notInInit);
 		if (!skipFrames)
 			mv.visitFrame(Opcodes.F_NEW, 0, new Object[0], 1, new Object[] { "java/lang/Class" });
-		mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-		mv.visitFieldInsn(Opcodes.GETFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+		mv.visitFieldInsn(Opcodes.GETSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
 		mv.visitJumpInsn(Opcodes.IFEQ, continu);
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 		mv.visitFieldInsn(Opcodes.PUTSTATIC, classNameWField, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;");
-		mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
 		mv.visitInsn(Opcodes.ICONST_0);
-		mv.visitFieldInsn(Opcodes.PUTFIELD, ClassState.INTERNAL_NAME, "needsReinit", "Z");
+		mv.visitFieldInsn(Opcodes.PUTSTATIC, className+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
+
 
 		mv.visitInsn(Opcodes.DUP);
 		mv.visitInsn(Opcodes.MONITOREXIT);
@@ -332,10 +309,18 @@ public class ClassReinitCV extends ClassVisitor {
 		}
 
 		if (!VMVMClassFileTransformer.isIgnoredClass(superName))
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, superName, "__vmvmReClinit", "()V", false);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, superName + Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
 
-		mv.visitFieldInsn(Opcodes.GETSTATIC, className, Constants.VMVM_NEEDS_RESET, ClassState.DESC);
-		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "reinitCalled", "(" + ClassState.DESC + ")V", false);
+		if (fixLdcClass) {
+			mv.visitLdcInsn(className.replace("/", ".") + Constants.VMVM_RESET_SUFFIX);
+			mv.visitInsn(Opcodes.ICONST_0);
+			mv.visitLdcInsn(className.replace("/", ".") + Constants.VMVM_RESET_SUFFIX);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false);
+			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;", false);
+		} else
+			mv.visitLdcInsn(Type.getObjectType(className + Constants.VMVM_RESET_SUFFIX));
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, Reinitializer.INTERNAL_NAME, "reinitCalled", "(Ljava/lang/Class;)V", false);
 		if (isEnum) {
 			if (fixLdcClass) {
 				mv.visitLdcInsn(className.replace("/", "."));

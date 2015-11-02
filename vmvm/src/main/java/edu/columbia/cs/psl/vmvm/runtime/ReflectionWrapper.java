@@ -11,19 +11,19 @@ import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz) {
 		Method[] r = clazz.getDeclaredMethods();
-		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
-			return r;
-		if(clazz.isInterface() || r.length == 0)
-			return r;
-		Method[] ret = new Method[r.length - 1];
-		int j = 0;
-		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit"))
-				continue;
-			ret[j] = r[i];
-			j++;
-		}
-		return ret;
+//		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+//			return r;
+//		if(clazz.isInterface() || r.length == 0)
+//			return r;
+//		Method[] ret = new Method[r.length - 1];
+//		int j = 0;
+//		for (int i = 0; i < r.length; i++) {
+//			if (r[i].getName().equals("__vmvmReClinit"))
+//				continue;
+//			ret[j] = r[i];
+//			j++;
+//		}
+		return r;
 	}
 	public static Class[] getInterfaces(Class<?> clazz) {
 		Class[] ret = clazz.getInterfaces();
@@ -44,19 +44,19 @@ public class ReflectionWrapper {
 	}
 	public static Method[] getMethods(Class<?> clazz) {
 		Method[] r = clazz.getMethods();
-		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
-			return r;
-		if(clazz.isInterface() || r.length == 0)
-			return r;
-		Method[] ret = new Method[r.length - 1];
-		int j = 0;
-		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit"))
-				continue;
-			ret[j] = r[i];
-			j++;
-		}
-		return ret;
+//		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+//			return r;
+//		if(clazz.isInterface() || r.length == 0)
+//			return r;
+//		Method[] ret = new Method[r.length - 1];
+//		int j = 0;
+//		for (int i = 0; i < r.length; i++) {
+//			if (r[i].getName().equals("__vmvmReClinit"))
+//				continue;
+//			ret[j] = r[i];
+//			j++;
+//		}
+		return r;
 	}
 
 	public static void set(Field f, Object owner, Object val) throws IllegalArgumentException, IllegalAccessException {
@@ -266,9 +266,10 @@ public class ReflectionWrapper {
 		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
 			return;
 		try {
-			boolean val = ((ClassState) clazz.getField(Constants.VMVM_NEEDS_RESET).get(null)).needsReinit;
+			Object resetter = clazz.getField(Constants.VMVM_RESET_SUFFIX).get(null);
+			boolean val = resetter.getClass().getField(Constants.VMVM_NEEDS_RESET).getBoolean(null);
 			if (val) {
-				clazz.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
+				resetter.getClass().getDeclaredMethod("__vmvmReClinit", null).invoke(null);
 			}
 		} catch (Exception ex) {
 			System.err.println("Error on " + clazz);

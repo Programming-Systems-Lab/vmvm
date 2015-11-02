@@ -19,99 +19,23 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
+import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+
 
 public final class Reinitializer {
 	public static final String INTERNAL_NAME = "edu/columbia/cs/psl/vmvm/runtime/Reinitializer";
 
 	public static Instrumentation inst;
 
-	static LinkedList<WeakReference<ClassState>> classesToReinit = new LinkedList<WeakReference<ClassState>>();
+	static LinkedList<WeakReference<Class>> classesToReinit = new LinkedList<WeakReference<Class>>();
 	public static HashSet<String> classesNotYetReinitialized = new HashSet<String>();
 
-	static HashMap<String, WeakReference<ClassState>> initializedClasses = new HashMap<String, WeakReference<ClassState>>();
 
 	public static final void logMessage(String s) {
 		System.err.println(s + ": " + Thread.currentThread().getName());
 	}
 
-	/**
-	 * Called on interfaces
-	 * 
-	 * @param clazz
-	 * @param fieldName
-	 * @return
-	 */
-	public static final boolean _vmvmReinitFieldCheck(String clazz, String fieldName) {
-		if (initializedClasses.get(clazz) == null)
-			return false;
-		ClassState cs = initializedClasses.get(clazz).get();
-		if (cs == null)
-			return false;
-		return tryToReinitForFieldOnInterface(cs, fieldName);
-	}
-
-	public static final boolean tryToReinitForFieldOnInterface(ClassState cs, String fieldName) {
-		tryToReinitForField(cs, fieldName, true);
-		return false;
-	}
-	private static final boolean tryToReinitForField(ClassState cs, String fieldName, boolean lookOnThisClass) {
-		if(!cs.fullyPopulated)
-			cs.populate(initializedClasses);
-		if(lookOnThisClass)
-		{
-			for(Field f : cs.fields)
-			{
-				if(f.getName().equals(fieldName))
-				{
-					try {
-						if(cs.isInterface)
-							callReinitOnInterface(cs.name+"$$VMVM_RESETTER");
-						else
-						cs.clazz.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-						e.printStackTrace();
-					}
-					return true;
-				}
-			}
-		}
-		//First, look on parent
-		if(cs.parent != null && tryToReinitForField(cs.parent, fieldName, true))
-			return true;
-		//Now, look on all ifaces
-		for(ClassState _cs : cs.interfaces)
-		{
-			if(_cs != null)
-				if(tryToReinitForField(_cs, fieldName, true))
-					return true;
-		}
-		return false;
-	}
-		
-	public static final void tryToReinitForField(ClassState cs, String fieldName) {
-		tryToReinitForField(cs, fieldName, false);
-	}
-
-	public static final void callReinitOnInterface(String c) {
-		if(VMVMClassFileTransformer.DEBUG)
-			System.out.println("Reinit on intfc" + c);
-		try {
-			Class cl = lookupInterfaceClass(c);
-			cl.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		}
-
-	}
-
+	
 	public static synchronized final void markAllClassesForReinit() {
 		//		long start = System.currentTimeMillis();
 		//		System.err.println("Start MCR ");
@@ -155,35 +79,23 @@ public final class Reinitializer {
 				System.clearProperty(s);
 		}
 		properties.clear();
-		LinkedList<WeakReference<ClassState>> toReinit = classesToReinit;
-		classesToReinit = new LinkedList<WeakReference<ClassState>>();
+		LinkedList<WeakReference<Class>> toReinit = classesToReinit;
+		classesToReinit = new LinkedList<WeakReference<Class>>();
 		classesNotYetReinitialized.clear();
-		for (WeakReference<ClassState> w : toReinit) {
+		for (WeakReference<Class> w : toReinit) {
 			if (w.get() != null) {
-				ClassState c = w.get();
-				classesNotYetReinitialized.add(c.name);
+				Class c = w.get();
+				classesNotYetReinitialized.add(c.getName());
 				try {
-					c.needsReinit = true;
-					c.hasClassesToOptAway = false;
-//					if (VMVMClassFileTransformer.DEBUG) {
-//						System.out.println("MCR " + c.name);
-//						File debugDir = new File("debug-readin");
-//						if (!debugDir.exists())
-//							debugDir.mkdir();
-//						try {
-//							File fi = new File("debug-readin/" + c.name.replace("/", ".") + ".class");
-//							FileOutputStream fos = new FileOutputStream(fi);
-//							fos.write(c.fullyInstrumentedClass);
-//							fos.close();
-//						} catch (Throwable t) {
-//							t.printStackTrace();
-//						}
-//					}
-					if (VMVMClassFileTransformer.ALWAYS_REOPT && c.isOptimized)
-						inst.redefineClasses(new ClassDefinition(c.clazz, c.fullyInstrumentedClass));
-					//					System.err.println("Adding checks in " + c);
-				} catch (IllegalArgumentException | NoClassDefFoundError | ClassNotFoundException | UnmodifiableClassException ex) {
-					ex.printStackTrace();
+					c.getField(Constants.VMVM_NEEDS_RESET).set(null, true);
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				} catch (NoSuchFieldException e) {
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					e.printStackTrace();
 				}
 
 			}
@@ -229,48 +141,15 @@ public final class Reinitializer {
 		}
 	}
 
-	public static final void reinitCalled(ClassState c) {
-//		if (VMVMClassFileTransformer.DEBUG)
-//			System.out.println("REinit called " + c.name + " in " + Thread.currentThread().getName());
-		//		if(c.getName().contains("BaseTest"))
-		//			new Exception().printStackTrace();
-		classesNotYetReinitialized.remove(c.name);
-		classesToReinit.add(new WeakReference<ClassState>(c));
-		//		inst.redefineClasses(definitions);
+	public static final void reinitCalled(Class c) {
+		classesNotYetReinitialized.remove(c.getName());
+		classesToReinit.add(new WeakReference<Class>(c));
 	}
 
-	public static final void clinitCalled(ClassState c) {
+	public static final void clinitCalled(Class c) {
 //		if (VMVMClassFileTransformer.DEBUG)
 //			System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
-		//				if(c.getName().contains("BaseTest"))
-		//					new Exception().printStackTrace();
-		initializedClasses.put(c.name, new WeakReference<ClassState>(c));
-		classesToReinit.add(new WeakReference<ClassState>(c));
-//		try {
-//			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.name.replace(".", "/"));
-//			c.originalClass = uninst;
-//			ClassReader cr = new ClassReader(uninst);
-//			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-//			ReinitCheckForceCV cv = new ReinitCheckForceCV(cw, false);
-//			try {
-//				cr.accept(cv, ClassReader.EXPAND_FRAMES);
-//			} catch (Throwable t) {
-//				throw new IllegalStateException(t);
-//			}
-//			c.fullyInstrumentedClass = cw.toByteArray();
-//			if (VMVMClassFileTransformer.DEBUG) {
-//				File debugDir = new File("debug-instheavy");
-//				if (!debugDir.exists())
-//					debugDir.mkdir();
-//				File f = new File("debug-instheavy/" + c.name.replace("/", ".") + ".class");
-//				FileOutputStream fos = new FileOutputStream(f);
-//				fos.write(c.fullyInstrumentedClass);
-//				fos.close();
-//			}
-//
-//		} catch (IllegalArgumentException | SecurityException | IOException e) {
-//			e.printStackTrace();
-//		}
+		classesToReinit.add(new WeakReference<Class>(c));
 	}
 
 	public static Class<?> lookupInterfaceClass(String name) {
