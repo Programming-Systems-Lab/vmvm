@@ -45,7 +45,7 @@ public class ReflectionFixingMV extends InstructionAdapter implements Opcodes {
 				super.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Class", "getClassLoader", "()Ljava/lang/ClassLoader;", false);
 				super.visitMethodInsn(opcode, owner, name, desc.substring(0, desc.indexOf(")")) + Type.getDescriptor(ClassLoader.class) + desc.substring(desc.indexOf(")")), itfc);
 			}
-		} else if ((Type.getInternalName(Class.class).equals(owner) && (name.equals("getDeclaredFields") || name.equals("getDeclaredMethods") || name.equals("getFields") || name.equals("getMethods")))) {
+		} else if ((Type.getInternalName(Class.class).equals(owner) && (name.equals("getDeclaredFields")||name.equals("getInterfaces") || name.equals("getDeclaredMethods") || name.equals("getFields") || name.equals("getMethods")))) {
 			desc = "(" + Type.getDescriptor(Class.class) + ")" + Type.getReturnType(desc).getDescriptor();
 			super.visitMethodInsn(INVOKESTATIC, Type.getInternalName(ReflectionWrapper.class), name, desc, false);
 		} else if ((Type.getInternalName(Method.class).equals(owner) && name.equals("invoke"))) {

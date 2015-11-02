@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 
@@ -15,15 +16,25 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		Method[] ret = new Method[r.length - 2];
+		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit") || r[i].getName().equals("_vmvmReinitFieldCheck"))
+			if (r[i].getName().equals("__vmvmReClinit"))
 				continue;
 			ret[j] = r[i];
 			j++;
 		}
 		return ret;
+	}
+	public static Class[] getInterfaces(Class<?> clazz) {
+		Class[] ret = clazz.getInterfaces();
+		ArrayList<Class> _ret = new ArrayList<Class>(ret.length);
+		for (int i = 0; i < ret.length; i++) {
+			if (ret[i] == VMVMInstrumented.class)
+				continue;
+			_ret.add(ret[i]);
+		}
+		return _ret.toArray(new Class[_ret.size()]);
 	}
 	public static Class<?> getType(Field f) throws IllegalArgumentException, IllegalAccessException
 	{
@@ -38,10 +49,10 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		Method[] ret = new Method[r.length - 2];
+		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
-			if (r[i].getName().equals("__vmvmReClinit") || r[i].getName().equals("_vmvmReinitFieldCheck"))
+			if (r[i].getName().equals("__vmvmReClinit"))
 				continue;
 			ret[j] = r[i];
 			j++;
@@ -175,7 +186,8 @@ public class ReflectionWrapper {
 		Field[] r = clazz.getDeclaredFields();
 		ArrayList<Field> ret = new ArrayList<>(r.length);
 		for (Field f : r) {
-			if (!f.getName().startsWith("_vmvm") && !f.getName().endsWith("VMVM_CLASSES_TO_CHECK") && !f.getName().equals("VMVM_RESET_IN_PROGRESS") && !f.getName().equals("VMVM_NEEDS_RESET"))
+			if (!f.getName().startsWith("_vmvm") && !f.getName().endsWith("VMVM_CLASSES_TO_CHECK") && !f.getName().equals("VMVM_RESET_IN_PROGRESS") && !f.getName().equals("VMVM_NEEDS_RESET")
+					&& !f.getName().equals("$$VMVM_RESETTER"))
 				ret.add(f);
 		}
 		r = new Field[ret.size()];
@@ -187,7 +199,8 @@ public class ReflectionWrapper {
 		Field[] r = clazz.getFields();
 		ArrayList<Field> ret = new ArrayList<>(r.length);
 		for (Field f : r) {
-			if (!f.getName().startsWith("_vmvm") && !f.getName().endsWith("VMVM_CLASSES_TO_CHECK") && !f.getName().equals("VMVM_RESET_IN_PROGRESS") && !f.getName().equals("VMVM_NEEDS_RESET"))
+			if (!f.getName().startsWith("_vmvm") && !f.getName().endsWith("VMVM_CLASSES_TO_CHECK") && !f.getName().equals("VMVM_RESET_IN_PROGRESS") && !f.getName().equals("VMVM_NEEDS_RESET")
+					&& !f.getName().equals("$$VMVM_RESETTER"))
 				ret.add(f);
 		}
 		r = new Field[ret.size()];
@@ -251,14 +264,17 @@ public class ReflectionWrapper {
 		//				return;
 		//			inited.add(clazz);
 		//			synchronized (clazz) {
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+			return;
 		try {
 			boolean val = ((ClassState) clazz.getField(Constants.VMVM_NEEDS_RESET).get(null)).needsReinit;
 			if (val) {
 				clazz.getDeclaredMethod("__vmvmReClinit", null).invoke(null);
 			}
 		} catch (Exception ex) {
+			System.err.println("Error on " + clazz);
 			//								if (!(ex instanceof NoSuchMethodException))
-			//									ex.printStackTrace();
+												ex.printStackTrace();
 
 		}
 		//		}

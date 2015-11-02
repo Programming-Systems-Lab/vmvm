@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
 import edu.columbia.cs.psl.test.vmvm.classes.IFace;
+import edu.columbia.cs.psl.test.vmvm.classes.LaterClass;
 import edu.columbia.cs.psl.test.vmvm.classes.SubClassWithAnotherSField;
 import edu.columbia.cs.psl.test.vmvm.classes.TryCatchInInitClass;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
@@ -17,6 +18,17 @@ import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
 public class ReinitializerITCase {
 	public static int foo = 5;
 
+	@Test
+	public void testReinitThroughClinit() throws Exception {
+		ClassWithOneSField.foo = 10;
+		Reinitializer.markAllClassesForReinit();
+		assertEquals(5, LaterClass.bar);
+	}
+	
+	@Test
+	public void testLongSetter() throws Exception{
+		System.out.println(EvilInterface.lon);
+	}
 	@Test
 	public void testReinitDirectIface() throws Exception {
 		ClassWithOneSField inst = IFace.inst;

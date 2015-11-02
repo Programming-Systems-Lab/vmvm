@@ -24,6 +24,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.objectweb.asm.ClassReader;
 
 public class Instrumenter {
 	public static ClassLoader loader;
@@ -32,12 +33,12 @@ public class Instrumenter {
 
 	static int n = 0;
 
-	public static byte[] instrumentClass(String path, InputStream is, boolean renameInterfaces) {
+	public static byte[] instrumentClass(String name, InputStream is, boolean renameInterfaces) {
 		try {
 			n++;
 			if (n % 1000 == 0)
 				System.out.println("Processed: " + n);
-			curPath = path;
+			curPath = name;
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
 			int nRead;
@@ -49,7 +50,9 @@ public class Instrumenter {
 
 			buffer.flush();
 			VMVMClassFileTransformer transformer = new VMVMClassFileTransformer();
-			byte[] ret = transformer.transform(Instrumenter.loader, path, null, null, buffer.toByteArray());
+			ClassReader cr = new ClassReader(buffer.toByteArray());
+			
+			byte[] ret = transformer.transform(Instrumenter.loader, cr.getClassName(), null, null, buffer.toByteArray());
 			curPath = null;
 			return ret;
 		} catch (Exception ex) {
@@ -94,7 +97,7 @@ public class Instrumenter {
 		rootOutputDir = new File(outputFolder);
 		if (!rootOutputDir.exists())
 			rootOutputDir.mkdir();
-
+System.out.println(inputFolder);
 		File f = new File(inputFolder);
 		if (!f.exists()) {
 			System.err.println("Unable to read path " + inputFolder);

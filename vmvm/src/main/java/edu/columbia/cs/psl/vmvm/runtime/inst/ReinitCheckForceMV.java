@@ -23,10 +23,9 @@ public class ReinitCheckForceMV extends MethodVisitor {
 	private boolean needOldLdc;
 	private String name;
 	private boolean skipFrames;
-	private boolean doOpt;
 	private boolean hasAnyChecks;
-
-	public ReinitCheckForceMV(MethodVisitor mv, AnalyzerAdapter analyzer, String owner, String name, boolean isStaticMethod, boolean needOldLdc, boolean skipFrames, boolean doOpt) {
+	private boolean doOpt = false;
+	public ReinitCheckForceMV(MethodVisitor mv, AnalyzerAdapter analyzer, String owner, String name, boolean isStaticMethod, boolean needOldLdc, boolean skipFrames) {
 		super(Opcodes.ASM5, mv);
 		this.isStaticMethod = isStaticMethod;
 		this.owner = owner;
@@ -34,7 +33,6 @@ public class ReinitCheckForceMV extends MethodVisitor {
 		this.an = analyzer;
 		this.needOldLdc = needOldLdc;
 		this.skipFrames = skipFrames;
-		this.doOpt = doOpt;
 	}
 
 	public static Object[] removeLongsDoubleTopVal(List<?> in) {
@@ -149,11 +147,7 @@ public class ReinitCheckForceMV extends MethodVisitor {
 	@Override
 	public void visitCode() {
 		super.visitCode();
-		if (VMVMClassFileTransformer.ALWAYS_REOPT || VMVMClassFileTransformer.HOTSPOT_REOPT) {
-			tmpLVidx = lvs.newLocal(Type.BOOLEAN_TYPE);
-			super.visitInsn(Opcodes.ICONST_0);
-			super.visitVarInsn(Opcodes.ISTORE, tmpLVidx);
-		}
+
 		if ((name.equals("<init>") || (isStaticMethod && !(name.equals("<clinit>") || name.equals("__vmvmReClinit") || name.equals("_vmvmReinitFieldCheck")))) && !doOpt) {
 			Label ok = new Label();
 			FrameNode fn = getCurrentFrame();
@@ -179,9 +173,4 @@ public class ReinitCheckForceMV extends MethodVisitor {
 
 	}
 
-	private LocalVariablesSorter lvs;
-
-	public void setLVS(LocalVariablesSorter lvs) {
-		this.lvs = lvs;
-	}
 }

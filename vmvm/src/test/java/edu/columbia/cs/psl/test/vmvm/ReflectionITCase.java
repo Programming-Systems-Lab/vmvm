@@ -1,19 +1,24 @@
 package edu.columbia.cs.psl.test.vmvm;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.columbia.cs.psl.test.vmvm.classes.ClassWithNoInterfaces;
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
 import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
 
 public class ReflectionITCase {
+	@Test
+	public void testNumberOfInterfaces() throws Exception {
+		assertEquals(1, ClassWithOneSField.class.getInterfaces().length);
+		assertEquals(0, ClassWithNoInterfaces.class.getInterfaces().length);
+	}
 	@Test
 	public void testReinitOnFieldAccess() throws Exception {
 		Class<?> clz = ClassWithOneSField.class;
@@ -57,6 +62,7 @@ public class ReflectionITCase {
 
 	@Test
 	public void testCorrectNumberOfFields() throws Exception {
+		assertEquals(2, ClassWithOneSField.class.getDeclaredFields().length);
 		for(Field f : ClassWithOneSField.class.getDeclaredFields())
 		{
 			assertNotEquals(f.getType(), MutableInstance.class);

@@ -1,8 +1,5 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
@@ -17,16 +14,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-
-import edu.columbia.cs.psl.vmvm.runtime.inst.ReinitCheckForceCV;
 
 public final class Reinitializer {
 	public static final String INTERNAL_NAME = "edu/columbia/cs/psl/vmvm/runtime/Reinitializer";
@@ -173,20 +165,20 @@ public final class Reinitializer {
 				try {
 					c.needsReinit = true;
 					c.hasClassesToOptAway = false;
-					if (VMVMClassFileTransformer.DEBUG) {
-						System.out.println("MCR " + c.name);
-						File debugDir = new File("debug-readin");
-						if (!debugDir.exists())
-							debugDir.mkdir();
-						try {
-							File fi = new File("debug-readin/" + c.name.replace("/", ".") + ".class");
-							FileOutputStream fos = new FileOutputStream(fi);
-							fos.write(c.fullyInstrumentedClass);
-							fos.close();
-						} catch (Throwable t) {
-							t.printStackTrace();
-						}
-					}
+//					if (VMVMClassFileTransformer.DEBUG) {
+//						System.out.println("MCR " + c.name);
+//						File debugDir = new File("debug-readin");
+//						if (!debugDir.exists())
+//							debugDir.mkdir();
+//						try {
+//							File fi = new File("debug-readin/" + c.name.replace("/", ".") + ".class");
+//							FileOutputStream fos = new FileOutputStream(fi);
+//							fos.write(c.fullyInstrumentedClass);
+//							fos.close();
+//						} catch (Throwable t) {
+//							t.printStackTrace();
+//						}
+//					}
 					if (VMVMClassFileTransformer.ALWAYS_REOPT && c.isOptimized)
 						inst.redefineClasses(new ClassDefinition(c.clazz, c.fullyInstrumentedClass));
 					//					System.err.println("Adding checks in " + c);
@@ -238,8 +230,8 @@ public final class Reinitializer {
 	}
 
 	public static final void reinitCalled(ClassState c) {
-		if (VMVMClassFileTransformer.DEBUG)
-			System.out.println("REinit called " + c.name + " in " + Thread.currentThread().getName());
+//		if (VMVMClassFileTransformer.DEBUG)
+//			System.out.println("REinit called " + c.name + " in " + Thread.currentThread().getName());
 		//		if(c.getName().contains("BaseTest"))
 		//			new Exception().printStackTrace();
 		classesNotYetReinitialized.remove(c.name);
@@ -248,37 +240,37 @@ public final class Reinitializer {
 	}
 
 	public static final void clinitCalled(ClassState c) {
-		if (VMVMClassFileTransformer.DEBUG)
-			System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
+//		if (VMVMClassFileTransformer.DEBUG)
+//			System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
 		//				if(c.getName().contains("BaseTest"))
 		//					new Exception().printStackTrace();
 		initializedClasses.put(c.name, new WeakReference<ClassState>(c));
 		classesToReinit.add(new WeakReference<ClassState>(c));
-		try {
-			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.name.replace(".", "/"));
-			c.originalClass = uninst;
-			ClassReader cr = new ClassReader(uninst);
-			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-			ReinitCheckForceCV cv = new ReinitCheckForceCV(cw, false);
-			try {
-				cr.accept(cv, ClassReader.EXPAND_FRAMES);
-			} catch (Throwable t) {
-				throw new IllegalStateException(t);
-			}
-			c.fullyInstrumentedClass = cw.toByteArray();
-			if (VMVMClassFileTransformer.DEBUG) {
-				File debugDir = new File("debug-instheavy");
-				if (!debugDir.exists())
-					debugDir.mkdir();
-				File f = new File("debug-instheavy/" + c.name.replace("/", ".") + ".class");
-				FileOutputStream fos = new FileOutputStream(f);
-				fos.write(c.fullyInstrumentedClass);
-				fos.close();
-			}
-
-		} catch (IllegalArgumentException | SecurityException | IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			byte[] uninst = VMVMClassFileTransformer.instrumentedClasses.remove(c.name.replace(".", "/"));
+//			c.originalClass = uninst;
+//			ClassReader cr = new ClassReader(uninst);
+//			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+//			ReinitCheckForceCV cv = new ReinitCheckForceCV(cw, false);
+//			try {
+//				cr.accept(cv, ClassReader.EXPAND_FRAMES);
+//			} catch (Throwable t) {
+//				throw new IllegalStateException(t);
+//			}
+//			c.fullyInstrumentedClass = cw.toByteArray();
+//			if (VMVMClassFileTransformer.DEBUG) {
+//				File debugDir = new File("debug-instheavy");
+//				if (!debugDir.exists())
+//					debugDir.mkdir();
+//				File f = new File("debug-instheavy/" + c.name.replace("/", ".") + ".class");
+//				FileOutputStream fos = new FileOutputStream(f);
+//				fos.write(c.fullyInstrumentedClass);
+//				fos.close();
+//			}
+//
+//		} catch (IllegalArgumentException | SecurityException | IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	public static Class<?> lookupInterfaceClass(String name) {
