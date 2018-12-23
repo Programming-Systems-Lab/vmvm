@@ -264,6 +264,8 @@ public class ReflectionWrapper {
 		//				return;
 		//			inited.add(clazz);
 		//			synchronized (clazz) {
+		if(clazz.isArray())
+			clazz = clazz.getComponentType();
 		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
 			return;
 		try {

@@ -65,7 +65,7 @@ public class ClassReinitCV extends ClassVisitor {
 		 * we did with the original VMVM).
 		 */
 		Type fieldType = Type.getType(desc);
-		if ((access & Opcodes.ACC_STATIC) != 0) {
+		if ((access & Opcodes.ACC_STATIC) != 0 && !name.equals("serialVersionUID")) {
 			access = access & ~Opcodes.ACC_PRIVATE;
 			access = access & ~Opcodes.ACC_PROTECTED;
 			access = access | Opcodes.ACC_PUBLIC;
@@ -318,6 +318,33 @@ public class ClassReinitCV extends ClassVisitor {
 				if (fn.desc.length() == 1)
 					Utils.box(mv, Type.getType(fn.desc));
 				mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, MutableInstance.INTERNAL_NAME, "put", "(Ljava/lang/Object;)V", false);
+			}
+			else if((fn.access & Opcodes.ACC_FINAL) == 0){
+				if (fn.value != null) {
+					mv.visitLdcInsn(fn.value);
+					mv.visitFieldInsn(Opcodes.PUTSTATIC, className, fn.name, fn.desc);
+				} else {
+					switch (Type.getType(fn.desc).getSort()) {
+						case Type.OBJECT:
+						case Type.ARRAY:
+							mv.visitInsn(Opcodes.ACONST_NULL);
+							break;
+						case Type.DOUBLE:
+							mv.visitInsn(Opcodes.DCONST_0);
+							break;
+						case Type.LONG:
+							mv.visitInsn(Opcodes.ICONST_0);
+							mv.visitInsn(Opcodes.I2L);
+							break;
+						case Type.FLOAT:
+							mv.visitInsn(Opcodes.FCONST_0);
+							break;
+						default:
+							mv.visitInsn(Opcodes.ICONST_0);
+							break;
+					}
+					mv.visitFieldInsn(Opcodes.PUTSTATIC, className, fn.name, fn.desc);
+				}
 			}
 		}
 

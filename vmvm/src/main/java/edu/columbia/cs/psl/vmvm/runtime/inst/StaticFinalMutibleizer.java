@@ -31,7 +31,7 @@ public class StaticFinalMutibleizer extends InstructionAdapter implements Opcode
 		Type originalType = Type.getType(desc);
 
 		if ((opcode == GETSTATIC || opcode == PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)
-				&& !name.equals(Constants.VMVM_NEEDS_RESET) && finalFields.contains(name)) {
+				&& !name.equals(Constants.VMVM_NEEDS_RESET) && !name.equals("serialVersionUID") && finalFields.contains(name)) {
 			if (opcode == GETSTATIC) {
 				super.visitFieldInsn(opcode, owner, name, Type.getDescriptor(MutableInstance.class));
 				super.visitMethodInsn(INVOKEVIRTUAL, Type.getInternalName(MutableInstance.class), "get", "()Ljava/lang/Object;", false);
