@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-		<groupId>edu.columbia.cs.psl.vmvm</groupId>
+		<groupId>edu.gmu.swe.vmvm</groupId>
 		<artifactId>vmvm-base-pom</artifactId>
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>

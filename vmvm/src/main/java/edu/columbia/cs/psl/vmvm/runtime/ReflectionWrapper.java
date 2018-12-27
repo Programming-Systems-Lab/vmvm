@@ -1,13 +1,12 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
+import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 
 public class ReflectionWrapper {
 	public static Method[] getDeclaredMethods(Class<?> clazz) {
@@ -16,6 +15,9 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
+		for(Class c : clazz.getInterfaces())
+			if(c.equals(VMVMInstrumented.class))
+				return r;
 		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
@@ -49,6 +51,9 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
+		for(Class c : clazz.getInterfaces())
+			if(c.equals(VMVMInstrumented.class))
+				return r;
 		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
@@ -274,10 +279,11 @@ public class ReflectionWrapper {
 			if (val) {
 				resetter.getClass().getDeclaredMethod("__vmvmReClinit", null).invoke(null);
 			}
-		} catch (Exception ex) {
-			System.err.println("Error on " + clazz);
-			//								if (!(ex instanceof NoSuchMethodException))
-												ex.printStackTrace();
+		} catch (Throwable ex) {
+			if (!(ex instanceof NoSuchFieldException)) {
+				ex.printStackTrace();
+				System.err.println("Error on " + clazz);
+			}
 
 		}
 		//		}

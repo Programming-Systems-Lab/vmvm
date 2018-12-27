@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>edu.columbia.cs.psl.vmvm</groupId>
+	<groupId>edu.gmu.swe.vmvm</groupId>
 	<artifactId>vmvm-base-pom</artifactId>
 	<name>${project.groupId}::${project.artifactId}</name>
 	<version>2.0.0-SNAPSHOT</version>
@@ -49,19 +49,19 @@
 
 			<!-- VMVM libraries -->
 			<dependency>
-				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<groupId>edu.gmu.swe.vmvm</groupId>
 				<artifactId>vmvm</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<groupId>edu.gmu.swe.vmvm</groupId>
 				<artifactId>vmvm-ant-junit-formatter</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
 			<dependency>
-				<groupId>edu.columbia.cs.psl.vmvm</groupId>
+				<groupId>edu.gmu.swe.vmvm</groupId>
 				<artifactId>vmvm-internal-static-detector</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -223,12 +223,43 @@
 			</plugin>
 		</plugins>
 	</build>
-    <distributionManagement>
-        <snapshotRepository>
-            <id>psl.internal</id>
-            <name>PSL Internal Repository</name>
-            <url>http://ase.cs.columbia.edu:8282/repository/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>gpg.passphrase</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
 </project>

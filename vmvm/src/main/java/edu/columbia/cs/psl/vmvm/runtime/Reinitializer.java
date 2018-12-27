@@ -20,6 +20,7 @@ import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+import edu.columbia.cs.psl.vmvm.runtime.inst.Utils;
 
 
 public final class Reinitializer {
@@ -35,6 +36,7 @@ public final class Reinitializer {
 		System.err.println(s + ": " + Thread.currentThread().getName());
 	}
 
+	static HashSet<Class> ignored = new HashSet<>();
 	
 	public static synchronized final void markAllClassesForReinit() {
 		//		long start = System.currentTimeMillis();
@@ -72,7 +74,7 @@ public final class Reinitializer {
 		}
 
 		for (String s : properties.keySet()) {
-			//							System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
+//										System.out.println("Reseting " + s + " from <" + System.getProperty(s) + "> to <" + properties.get(s) + ">");
 			if (properties.get(s) != null)
 				System.setProperty(s, properties.get(s));
 			else
@@ -85,6 +87,13 @@ public final class Reinitializer {
 		for (WeakReference<Class> w : toReinit) {
 			if (w.get() != null) {
 				Class c = w.get();
+				if(ignored.contains(c))
+					continue;
+				if(Utils.ignorePattern != null && c.getName().replace('.','/').startsWith(Utils.ignorePattern))
+				{
+					ignored.add(c);
+					continue;
+				}
 				classesNotYetReinitialized.add(c.getName());
 				try {
 					c.getField(Constants.VMVM_NEEDS_RESET).set(null, true);

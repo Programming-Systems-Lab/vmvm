@@ -83,6 +83,8 @@ public class Utils {
 
 	}
 
+	public static String ignorePattern = null;
+
 	public static void unbox(MethodVisitor mv, final Type type) {
 		Type t = NUMBER_TYPE;
 		Method sig = null;

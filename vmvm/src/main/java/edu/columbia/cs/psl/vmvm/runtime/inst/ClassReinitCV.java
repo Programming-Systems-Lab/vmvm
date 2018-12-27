@@ -226,10 +226,10 @@ public class ClassReinitCV extends ClassVisitor {
 		}
 
 		if (isInterface) {
-			reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+			reClinitMethod = new MethodNode(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "__vmvmReClinit", "()V", null, null);
 			mv = reClinitMethod;
 		} else
-			mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC, "__vmvmReClinit", "()V", null, null);
+			mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "__vmvmReClinit", "()V", null, null);
 		
 		final Label finishedClinitCode = new Label();
 		LabelRemappingMV reLabeler = new LabelRemappingMV(mv, finishedClinitCode);

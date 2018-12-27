@@ -1,33 +1,30 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
+import edu.columbia.cs.psl.vmvm.runtime.inst.ClassReinitCV;
+import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+import edu.columbia.cs.psl.vmvm.runtime.inst.ReflectionFixingCV;
+import edu.columbia.cs.psl.vmvm.runtime.inst.StaticFinalMutibleizer;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.util.CheckClassAdapter;
+import sun.misc.Unsafe;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
+import java.lang.reflect.Field;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.SerialVersionUIDAdder;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.util.CheckClassAdapter;
-
-import edu.columbia.cs.psl.vmvm.runtime.inst.ClassReinitCV;
-import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
-import edu.columbia.cs.psl.vmvm.runtime.inst.ReflectionFixingCV;
-import edu.columbia.cs.psl.vmvm.runtime.inst.StaticFinalMutibleizer;
-
 public class VMVMClassFileTransformer implements ClassFileTransformer {
+
 	public static boolean isIgnoredClass(String internalName) {
+		internalName = internalName.replace('.','/');
 		if (isWhitelistedClass(internalName))
 			return false;
 		return internalName.startsWith("java") || internalName.startsWith("jdk") || internalName.startsWith("sun") || internalName.startsWith("com/sun")
@@ -37,7 +34,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	}
 
 	public static boolean isWhitelistedClass(String internalName) {
-		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini");
+		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini") ;
 	}
 
 	public static boolean isClassThatNeedsReflectionHacked(String internalName) {
@@ -58,8 +55,15 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 
 	@SuppressWarnings("restriction")
 	static sun.misc.Unsafe getUnsafe() {
-		if (theUnsafe == null)
-			theUnsafe = sun.misc.Unsafe.getUnsafe();
+		if (theUnsafe == null) {
+			try {
+				Field f = Unsafe.class.getDeclaredField("theUnsafe");
+				f.setAccessible(true);
+				theUnsafe = (Unsafe) f.get(null);
+			}catch(NoSuchFieldException | IllegalAccessException ex){
+				ex.printStackTrace();
+			}
+		}
 		return theUnsafe;
 	}
 
@@ -129,7 +133,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			else
 			{
 				//Generate a reclinit method that just calls the one on the actual class :/
-				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC|Opcodes.ACC_STATIC, "__vmvmReClinit", "()V", null,null);
+				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC, "__vmvmReClinit", "()V", null, null);
 				mv.visitCode();
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, cr.getClassName(), "__vmvmReClinit", "()V", false);
 				mv.visitInsn(Opcodes.RETURN);
@@ -441,8 +445,9 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 		}
 		if (classBeingRedefined != null) {
 			System.err.println("Redefine!");
-			return null;
+//			return null;
 		}
+//		System.out.println("Inst " + className);
 		try {
 			//			if(DEBUG)
 //			System.err.println("VMVMClassfiletransformer PLAIN " + className + " in " + loader);
@@ -472,7 +477,8 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				cr.accept(cn, 0);
 				for (Object s : cn.interfaces) {
 					if (s.equals(Type.getInternalName(VMVMInstrumented.class)))
-						throw new IllegalArgumentException();
+						return null;
+//						throw new IllegalArgumentException();
 				}
 			}
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
