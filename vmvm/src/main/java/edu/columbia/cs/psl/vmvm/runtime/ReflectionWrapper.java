@@ -15,9 +15,12 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		for(Class c : clazz.getInterfaces())
-			if(c.equals(VMVMInstrumented.class))
-				return r;
+		boolean found = false;
+		for (Class c : clazz.getInterfaces())
+			if (c.equals(VMVMInstrumented.class))
+				found = true;
+		if (!found)
+			return r;
 		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
@@ -51,9 +54,12 @@ public class ReflectionWrapper {
 			return r;
 		if(clazz.isInterface() || r.length == 0)
 			return r;
-		for(Class c : clazz.getInterfaces())
-			if(c.equals(VMVMInstrumented.class))
-				return r;
+		boolean found = false;
+		for (Class c : clazz.getInterfaces())
+			if (c.equals(VMVMInstrumented.class))
+				found = true;
+		if (!found)
+			return r;
 		Method[] ret = new Method[r.length - 1];
 		int j = 0;
 		for (int i = 0; i < r.length; i++) {
