@@ -3,6 +3,7 @@ package edu.columbia.cs.psl.vmvm.runtime.inst;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import com.sun.org.apache.bcel.internal.generic.ACONST_NULL;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
@@ -167,9 +168,8 @@ public class ClassReinitCV extends ClassVisitor {
 		MethodVisitor mv = super.visitMethod(Opcodes.ACC_STATIC, "<clinit>", "()V", null, null);
 		mv.visitCode();
 
-		mv.visitTypeInsn(Opcodes.NEW, className + Constants.VMVM_RESET_SUFFIX);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className + Constants.VMVM_RESET_SUFFIX, "<init>", "()V", false);
+		//weirdly using a factory fixes powermock?
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, className + Constants.VMVM_RESET_SUFFIX, "instance", "()L"+className + Constants.VMVM_RESET_SUFFIX +";", false);
 		mv.visitFieldInsn(Opcodes.PUTSTATIC, className, Constants.VMVM_RESET_SUFFIX, "L" + className + Constants.VMVM_RESET_SUFFIX + ";");
 
 		

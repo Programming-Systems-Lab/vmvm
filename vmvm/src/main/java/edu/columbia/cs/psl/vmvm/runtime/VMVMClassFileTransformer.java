@@ -30,6 +30,8 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 		return internalName.startsWith("java") || internalName.startsWith("jdk") || internalName.startsWith("sun") || internalName.startsWith("com/sun")
 				|| internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime") || internalName.startsWith("org/junit") || internalName.startsWith("junit/")
 				|| internalName.startsWith("edu/columbia/cs/psl/vmvm/") || internalName.startsWith("org/apache/maven/surefire") || internalName.startsWith("org/apache/tools/")
+				|| internalName.startsWith("org/mockito") || internalName.startsWith("mockit")
+				|| internalName.startsWith("org/powermock")
 				|| internalName.startsWith("com/jprofiler");
 	}
 
@@ -46,7 +48,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	public static AdditionalInterfaceClassloader cl = new AdditionalInterfaceClassloader();
 
 	public static HashSet<String> instrumentedClasses = new HashSet<String>();
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	public static final boolean ALWAYS_REOPT = false;
 	public static final boolean HOTSPOT_REOPT = false;
 
@@ -69,12 +71,11 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 
 	private void generateResetter(ClassReader cr, ClassReinitCV cv, String className, ClassLoader loader, ProtectionDomain protectionDomain) {
 		if (
-				((loader == null && instrumentedClasses.contains(className)) 
-						|| hasClass(loader, className + Constants.VMVM_RESET_SUFFIX)))
+				((instrumentedClasses.contains(className))
+				)) //|| hasClass(loader, className + Constants.VMVM_RESET_SUFFIX)))
 			return;
 		String newName = cr.getClassName() + Constants.VMVM_RESET_SUFFIX;
 //		System.out.println("Generating " + newName);
-		if(loader == null)
 			instrumentedClasses.add(className);
 
 		try {
@@ -140,6 +141,20 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				mv.visitMaxs(0, 0);
 				mv.visitEnd();
 			}
+
+			//...
+			{
+				MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC,"instance","()L"+cr.getClassName()+Constants.VMVM_RESET_SUFFIX+";",null,null);
+				mv.visitCode();
+				mv.visitTypeInsn(Opcodes.NEW, className + Constants.VMVM_RESET_SUFFIX);
+				mv.visitInsn(Opcodes.DUP);
+				mv.visitMethodInsn(Opcodes.INVOKESPECIAL, className + Constants.VMVM_RESET_SUFFIX, "<init>", "()V", false);
+				mv.visitInsn(Opcodes.ARETURN);
+				mv.visitMaxs(0,0);
+				mv.visitEnd();
+			}
+
+
 			MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
 			mv.visitCode();
 			mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -283,12 +298,11 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 
 	private void generateInterface(ClassReader cr, ClassReinitCV cv, String className, ClassLoader loader, ProtectionDomain protectionDomain) throws IOException {
 		if(
-				((loader == null && instrumentedInterfaces.contains(className)) ||
-						hasClass(loader, className + Constants.VMVM_RESET_SUFFIX + "$$INTERFACE"))
+				((instrumentedInterfaces.contains(className)) ) //||
+//						hasClass(loader, className + Constants.VMVM_RESET_SUFFIX + "$$INTERFACE"))
 			)
 			return;
-		if(loader == null)
-			instrumentedInterfaces.add(className);
+		instrumentedInterfaces.add(className);
 		String newName = cr.getClassName() + Constants.VMVM_RESET_SUFFIX;
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 		newName = newName + "$$INTERFACE";
@@ -422,13 +436,13 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 		getUnsafe().defineClass(newName.replace("/", "."), b, 0, b.length, loader, protectionDomain);
 	}
 
-	private HashSet<String> instrumentedInterfaces = new HashSet<String>();
+	private static HashSet<String> instrumentedInterfaces = new HashSet<String>();
 
 	@SuppressWarnings("restriction")
 	@Override
 	public synchronized byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 		//		if(DEBUG)
-		//			System.err.println("VMVMClassfiletransformer PLAIN1 " + className);
+//					System.err.println("VMVMClassfiletransformer PLAIN1 " + className + " " + loader + " " + classBeingRedefined);
 		if (classBeingRedefined == null && isClassThatNeedsReflectionHacked(className)) {
 			try {
 				ClassReader cr = new ClassReader(classfileBuffer);
