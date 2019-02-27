@@ -82,6 +82,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 			cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.VMVM_NEEDS_RESET, "Z", null, null);
 			ArrayList<String> interfaces = new ArrayList<String>();
+
 			for (String s : cr.getInterfaces()) {
 				if (!isIgnoredClass(s)) {
 
@@ -286,6 +287,12 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				ClassReader cr2 = new ClassReader(b);
 				cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 			}
+			if(alwaysLoadInBootCP(newName))
+			{
+				loader = null;
+				protectionDomain = null;
+			}
+//			System.out.println("Done with " + newName + " in " + System.identityHashCode(loader) + ", " + System.identityHashCode(protectionDomain));
 			getUnsafe().defineClass(newName.replace("/", "."), b, 0, b.length, loader, protectionDomain);
 
 		} catch (Exception ex) {
@@ -432,8 +439,22 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			ClassReader cr2 = new ClassReader(b);
 			cr2.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 		}
-//		System.out.println("Done with " + newName);
+
+
+		if(alwaysLoadInBootCP(newName))
+		{
+			loader = null;
+			protectionDomain = null;
+		}
+//		System.out.println("Done with " + newName + " in " + System.identityHashCode(loader) + ", " + System.identityHashCode(protectionDomain));
 		getUnsafe().defineClass(newName.replace("/", "."), b, 0, b.length, loader, protectionDomain);
+	}
+
+	private boolean alwaysLoadInBootCP(String newName) {
+		return newName.startsWith("org/xml")
+				|| newName.startsWith("org/w3c")
+				|| newName.startsWith("java/")
+				|| newName.startsWith("javax/");
 	}
 
 	private static HashSet<String> instrumentedInterfaces = new HashSet<String>();
@@ -531,7 +552,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			return ret;
 		} catch (Throwable t) {
 			//Make sure that an exception in instrumentation gets printed, rather than squelched
-			System.err.println("In " + className + ":");
+			System.err.println("In transformation for " + className + ":");
 			t.printStackTrace();
 			return null;
 		}
