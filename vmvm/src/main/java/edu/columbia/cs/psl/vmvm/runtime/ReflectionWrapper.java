@@ -1,6 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +10,57 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 public class ReflectionWrapper {
+
+	private static Field getField(Class<?> clazz, String name) throws NoSuchFieldException {
+		return clazz.getField(name);
+	}
+	public static void putStaticField(Object value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putObject(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(boolean value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putBoolean(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(byte value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putByte(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(char value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putChar(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(int value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putInt(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(short value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putShort(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(long value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putLong(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(float value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putFloat(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+	public static void putStaticField(double value, Class<?> clazz, String name) throws NoSuchFieldException {
+		Field f = getField(clazz, name);
+		Unsafe u = VMVMClassFileTransformer.getUnsafe();
+		u.putDouble(u.staticFieldBase(f),u.staticFieldOffset(f), value);
+	}
+
+
 	public static Method[] getDeclaredMethods(Class<?> clazz) {
 		Method[] r = clazz.getDeclaredMethods();
 		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
@@ -280,12 +332,13 @@ public class ReflectionWrapper {
 		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
 			return;
 		try {
-			Object resetter = clazz.getField(Constants.VMVM_RESET_SUFFIX).get(null);
-			boolean val = resetter.getClass().getField(Constants.VMVM_NEEDS_RESET).getBoolean(null);
+			boolean val = clazz.getField(Constants.VMVM_NEEDS_RESET).getBoolean(null);
 			if (val) {
-				resetter.getClass().getDeclaredMethod("__vmvmReClinit", null).invoke(null);
+				InterfaceReinitializer resetter = (InterfaceReinitializer) clazz.getField(Constants.VMVM_RESET_FIELD).get(null);
+				resetter.__vmvmReClinit();
 			}
 		} catch (Throwable ex) {
+			ex.printStackTrace();
 			if (!(ex instanceof NoSuchFieldException)) {
 				ex.printStackTrace();
 				System.err.println("Error on " + clazz);

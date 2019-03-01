@@ -1,26 +1,18 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
-import java.lang.instrument.ClassDefinition;
-import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
-import java.lang.management.ManagementFactory;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Properties;
-import java.util.Set;
+import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
+import edu.columbia.cs.psl.vmvm.runtime.inst.Utils;
+import sun.misc.Unsafe;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
-
-import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
-import edu.columbia.cs.psl.vmvm.runtime.inst.Utils;
+import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.net.URL;
+import java.util.*;
 
 
 public final class Reinitializer {
@@ -96,12 +88,13 @@ public final class Reinitializer {
 				}
 				classesNotYetReinitialized.add(c.getName());
 				try {
-					c.getField(Constants.VMVM_NEEDS_RESET).set(null, true);
+					Field f = c.getField(Constants.VMVM_NEEDS_RESET);
+					Unsafe u = VMVMClassFileTransformer.getUnsafe();
+					u.putBoolean(u.staticFieldBase(f), u.staticFieldOffset(f), true);
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
 				} catch (NoSuchFieldException e) {
+					System.err.println("On " + c);
 					e.printStackTrace();
 				} catch (SecurityException e) {
 					e.printStackTrace();
@@ -111,7 +104,6 @@ public final class Reinitializer {
 		}
 		Thread.currentThread().setContextClassLoader(ClassLoader.getSystemClassLoader());
 
-		//		System.err.println("End MCR " + (System.currentTimeMillis() - start));
 	}
 
 	private static HashSet<Thread> shutdownHooks = new HashSet<Thread>();
@@ -124,8 +116,8 @@ public final class Reinitializer {
 	}
 
 	public static final void fixEnum(Class<?> c) {
-		if (VMVMClassFileTransformer.DEBUG)
-			System.out.println("Fixup enum " + c);
+//		if (VMVMClassFileTransformer.DEBUG)
+//			System.out.println("Fixup enum " + c);
 		try {
 			Field f = Class.class.getDeclaredField("enumConstants");
 			f.setAccessible(true);
@@ -138,27 +130,29 @@ public final class Reinitializer {
 		}
 	}
 
-	public static final void reopt(Class<?> c) {
-		try {
-			System.err.println("Reoptimizing " + c);
-			synchronized (c) {
-				inst.retransformClasses(c);
-				c.notifyAll();
-			}
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-	}
-
 	public static final void reinitCalled(Class c) {
+//		System.err.println("Reinit: " + c);
 		classesNotYetReinitialized.remove(c.getName());
 		classesToReinit.add(new WeakReference<Class>(c));
 	}
 
-	public static final void clinitCalled(Class c) {
+	public static final InterfaceReinitializer clinitCalled(Class c) {
 //		if (VMVMClassFileTransformer.DEBUG)
 //			System.out.println("CLinit called " + c.clazz + " in " + Thread.currentThread().getName());
 		classesToReinit.add(new WeakReference<Class>(c));
+		//TODO create the anonymous class here
+
+		Class<?> resetter = VMVMClassFileTransformer.generateResetter(c);
+		try {
+			InterfaceReinitializer ret = (InterfaceReinitializer) resetter.newInstance();
+			ret.__vmvmReClinit();
+			return ret;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public static Class<?> lookupInterfaceClass(String name) {

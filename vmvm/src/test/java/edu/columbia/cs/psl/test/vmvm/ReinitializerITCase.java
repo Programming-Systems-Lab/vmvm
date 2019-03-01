@@ -84,7 +84,7 @@ public class ReinitializerITCase {
 		ClassWithOneSField.foo = 3;
 		Reinitializer.markAllClassesForReinit();
 		assertEquals(5, SubClassWithAnotherSField.foo);
-		assertEquals(3, FieldGetter.getBarWithoutInit());
+		assertEquals(4, FieldGetter.getBarWithoutInit());
 
 	}
 
@@ -100,7 +100,7 @@ public class ReinitializerITCase {
 		ClassWithOneSField inst = SubClassWithAnotherSField.inst;
 		assertEquals(5, inst.val);
 		assertEquals(5, FieldGetter.getFooWithoutInit()); //ClassWithOneSField should get called via the Iface reinit
-		assertEquals(3, FieldGetter.getBarWithoutInit());
+		assertEquals(4, FieldGetter.getBarWithoutInit());
 
 	}
 

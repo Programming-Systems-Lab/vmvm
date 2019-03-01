@@ -1,18 +1,17 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
+import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
+import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 import org.objectweb.asm.tree.FrameNode;
 
-import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
-import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class ReinitCheckForceMV extends MethodVisitor {
 	private AnalyzerAdapter an;
@@ -72,54 +71,41 @@ public class ReinitCheckForceMV extends MethodVisitor {
 
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-		
-		if ((opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner) //&& !owner.equals(this.owner)
+
+		if ((opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC) && !VMVMClassFileTransformer.isIgnoredClass(owner)
 				&& !name.equals(Constants.VMVM_NEEDS_RESET)
-						&& !desc.equals("L"+MutableInstance.INTERNAL_NAME+";")
-						&& !name.equals("$$VMVM_RESETTER")
-						&& !name.equals(Constants.VMVM_RESET_IN_PROGRESS)) {
-			if(opcode == Opcodes.GETSTATIC)
-			{
-				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_SUFFIX, "L"+owner+Constants.VMVM_RESET_SUFFIX+";");
-				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner+Constants.VMVM_RESET_SUFFIX, "get"+name, "()"+desc, false);
-			}
-			else
-			{
-				super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_SUFFIX, "L"+owner+Constants.VMVM_RESET_SUFFIX+";");
-				Type t = Type.getType(desc);
-				if(t.getSize() == 1)
-				{
-					super.visitInsn(Opcodes.SWAP);
-				}
-				else
-				{
-					super.visitInsn(Opcodes.DUP_X2);
-					super.visitInsn(Opcodes.POP);
-				}
-				super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, owner+Constants.VMVM_RESET_SUFFIX, "set"+name, "("+desc+")V", false);
-			}
+				&& !desc.equals("L" + MutableInstance.INTERNAL_NAME + ";")
+				&& !name.equals("$$VMVM_RESETTER")
+				&& !name.equals(Constants.VMVM_RESET_IN_PROGRESS)) {
+			addCheck(owner);
 		}
-		else
-			super.visitFieldInsn(opcode, owner, name, desc);
+		super.visitFieldInsn(opcode, owner, name, desc);
 	}
 
 
+	private void addCheck(String owner){
+		if(!checked.add(owner) && !this.name.contains("test"))
+			return;
+		Label ok = new Label();
+		FrameNode fn = getCurrentFrame();
+		super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_NEEDS_RESET, "Z");
+
+		super.visitJumpInsn(Opcodes.IFEQ, ok);
+		super.visitFieldInsn(Opcodes.GETSTATIC, owner, Constants.VMVM_RESET_FIELD, "L"+InterfaceReinitializer.INTERNAL_NAME+";");
+		super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, InterfaceReinitializer.INTERNAL_NAME, "__vmvmReClinit", "()V", false);
+		super.visitLabel(ok);
+		if (!skipFrames) {
+			fn.accept(this);
+			super.visitInsn(Opcodes.NOP);
+		}
+	}
+	HashSet<String> checked = new HashSet<>();
 	@Override
 	public void visitCode() {
 		super.visitCode();
 
 		if ((name.equals("<init>") || (isStaticMethod && !(name.equals("<clinit>") || name.equals("__vmvmReClinit") || name.equals("_vmvmReinitFieldCheck")))) && !doOpt) {
-			Label ok = new Label();
-			FrameNode fn = getCurrentFrame();
-			super.visitFieldInsn(Opcodes.GETSTATIC, owner+Constants.VMVM_RESET_SUFFIX, Constants.VMVM_NEEDS_RESET, "Z");
-
-			super.visitJumpInsn(Opcodes.IFEQ, ok);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, owner+Constants.VMVM_RESET_SUFFIX, "__vmvmReClinit", "()V", false);
-			super.visitLabel(ok);
-			if (!skipFrames) {
-				fn.accept(this);
-				super.visitInsn(Opcodes.NOP);
-			}
+			addCheck(owner);
 		}
 
 	}

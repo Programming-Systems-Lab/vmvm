@@ -1,20 +1,20 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import java.util.HashMap;
-
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class LabelRemappingMV extends MethodVisitor{
+import java.util.HashMap;
+
+public class LabelRemappingMV extends MethodVisitor {
 	private HashMap<Label, Label> newLabels = new HashMap<Label, Label>();
 	private Label finishedClinitCode;
 
-	public LabelRemappingMV(MethodVisitor mv, Label finishedClinitlbl)
-	{
-		super(Opcodes.ASM5,mv);
+	public LabelRemappingMV(MethodVisitor mv, Label finishedClinitlbl) {
+		super(Opcodes.ASM5, mv);
 		this.finishedClinitCode = finishedClinitlbl;
 	}
+
 	private Label remapLabel(Label l) {
 		if (newLabels.containsKey(l))
 			return newLabels.get(l);
@@ -24,10 +24,26 @@ public class LabelRemappingMV extends MethodVisitor{
 	}
 
 	@Override
+	public void visitFrame(int type, int nLocal, Object[] local, int nStack, Object[] stack) {
+		if (stack != null) {
+			Object[] newStack = new Object[stack.length];
+			for (int i = 0; i < stack.length; i++)
+				if (stack[i] instanceof Label)
+					newStack[i] = remapLabel((Label) stack[i]);
+				else
+					newStack[i] = stack[i];
+			super.visitFrame(type, nLocal, local, nStack, newStack);
+		} else
+			super.visitFrame(type, nLocal, local, nStack, stack);
+	}
+
+	@Override
 	public void visitTableSwitchInsn(int min, int max, Label dflt, Label... labels) {
+		Label[] newLabels = new Label[labels.length];
 		for (int i = 0; i < labels.length; i++)
-			labels[i] = remapLabel(labels[i]);
-		super.visitTableSwitchInsn(min, max, dflt, labels);
+			newLabels[i] = remapLabel(labels[i]);
+		dflt = remapLabel(dflt);
+		super.visitTableSwitchInsn(min, max, dflt, newLabels);
 	}
 
 	@Override
@@ -47,9 +63,11 @@ public class LabelRemappingMV extends MethodVisitor{
 
 	@Override
 	public void visitLookupSwitchInsn(Label dflt, int[] keys, Label[] labels) {
+		Label[] newLabels = new Label[labels.length];
 		for (int i = 0; i < labels.length; i++)
-			labels[i] = remapLabel(labels[i]);
-		super.visitLookupSwitchInsn(dflt, keys, labels);
+			newLabels[i] = remapLabel(labels[i]);
+		dflt = remapLabel(dflt);
+		super.visitLookupSwitchInsn(dflt, keys, newLabels);
 	}
 
 	@Override
