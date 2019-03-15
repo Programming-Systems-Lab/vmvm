@@ -29,7 +29,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 						|| internalName.startsWith("jdk")
 						|| internalName.startsWith("sun/misc")
 						|| internalName.startsWith("sun/reflect")
-						|| internalName.startsWith("sun/java2d/opengl")
+						|| internalName.equals("sun/java2d/opengl/OGLRenderQueue")
 //				|| internalName.startsWith("com/sun")
 						|| internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
 						|| internalName.startsWith("org/junit")
@@ -42,7 +42,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	}
 
 	public static boolean isWhitelistedClass(String internalName) {
-		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini") || internalName.startsWith("java/awt");
+		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini") || internalName.startsWith("java/awt") || internalName.startsWith("javax/swing") || internalName.startsWith("javax/xml");
 	}
 
 	public static boolean isClassThatNeedsReflectionHacked(String internalName) {
@@ -203,6 +203,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			}
 		}
 		if (isIgnoredClass(className)) {
+			System.out.println("Skip "  + className);
 			return null;
 		}
 		if (classBeingRedefined != null) {
