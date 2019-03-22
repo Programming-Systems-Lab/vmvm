@@ -203,11 +203,11 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 			}
 		}
 		if (isIgnoredClass(className)) {
-			System.out.println("Skip "  + className);
+//			System.out.println("Skip "  + className);
 			return null;
 		}
 		if (classBeingRedefined != null) {
-			System.err.println("Redefine!");
+//			System.err.println("Redefine!");
 //			return null;
 		}
 //		System.out.println("Inst " + className);

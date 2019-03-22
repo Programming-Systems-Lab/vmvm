@@ -1,5 +1,6 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
+import edu.columbia.cs.psl.vmvm.runtime.ConsumerUtils;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -84,6 +85,7 @@ public class Utils {
 	}
 
 	public static String ignorePattern = null;
+	public static ConsumerUtils consumerUtils = new ConsumerUtils();
 
 	public static void unbox(MethodVisitor mv, final Type type) {
 		Type t = NUMBER_TYPE;

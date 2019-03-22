@@ -13,12 +13,14 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
+import java.util.function.Consumer;
 
 
 public final class Reinitializer {
 	public static final String INTERNAL_NAME = "edu/columbia/cs/psl/vmvm/runtime/Reinitializer";
 
 	public static Instrumentation inst;
+	private static final boolean DEBUG = System.getenv("DEBUG") != null;
 
 	static LinkedList<WeakReference<Class>> classesToReinit = new LinkedList<WeakReference<Class>>();
 	public static HashSet<String> classesNotYetReinitialized = new HashSet<String>();
@@ -81,11 +83,13 @@ public final class Reinitializer {
 				Class c = w.get();
 				if(ignored.contains(c))
 					continue;
-				if(Utils.ignorePattern != null && c.getName().replace('.','/').startsWith(Utils.ignorePattern))
+				if(Utils.consumerUtils.isIgnoredClass(c.getName().replace('.','/')))
 				{
 					ignored.add(c);
 					continue;
 				}
+				if(DEBUG)
+					System.out.println("Reinit: " + c.getName());
 				classesNotYetReinitialized.add(c.getName());
 				try {
 					Field f = c.getField(Constants.VMVM_NEEDS_RESET);

@@ -1,9 +1,18 @@
 language: java
 sudo: false
 jdk: oraclejdk8
-script: "mvn verify"
-after_success:
-  - echo "<settings><servers><server><id>psl.internal</id><username>\${env.OSSRH_USER}</username><password>\${env.OSSRH_PASS}</password></server></servers></settings>" > ~/settings.xml
-  - mvn -DskipTests=true deploy --settings ~/settings.xml
-  - curl -T vmvm-ant-junit-formatter/target/vmvm-ant-junit-formatter-2.0.0-SNAPSHOT.jar -u $FTP_USER:$FTP_PASS ftp://jonbell.net/vmvm/ant-mvn-formatter.jar
-  - curl -T vmvm/target/vmvm-2.0.0-SNAPSHOT.jar -u $FTP_USER:$FTP_PASS ftp://jonbell.net/vmvm/vmvm.jar
+script: mvn verify
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: cd $TRAVIS_BUILD_DIR; bash deployment/deploy.sh
+  on:
+    branch: master
+env:
+  global:
+  - secure: jKeinjZsevIWoUvHDrgDE4gfkQR6Z4rB5vIF0QQEltWcWOHZXLGhxE7ecy6/ff1Z5gzZtCTeneLsthkzqrbzm8FzVAhbYJ9WwpENz0spVVyjnHUU7W72tI5AKlLNTonJDJOogENhT95ivgZ3/cAPMYw1qnDKCNfdBwfT3Il39UY=
+  - secure: G4admxhpOLcuQ6kpUtMNW44VPkg01/Emb4geuZQ7fnHuMJ/G1bkRemtP1/7eLeoBNjTWAATKWt9uHdv9PwsqvoYVxndstxZ6lhjdaPL4KHvxbfhnckm+h4ZBMHH1li8pDX6T0GB1uH/SAx/ML/v3w5+XKZfqtsYS1EPRt0ylQbM=
+  - secure: TGMDGOLnCg1X04Binmg9QSPxdjo77iwJN3A1qfCAPa+uM6IaYHoIUBXZr8z9nX6gDaVPxmjErlpByDYMt/Uh8sNEY8+L85PAF1L4Fg94GO5edWgYUUGMvwcqAIwVwvZZSteXqJpUaWAlVC1lxUn7AsiJ+wdonGHREzO++SxeZYo=
+before_install:
+- openssl aes-256-cbc -K $encrypted_df4dabc64bbd_key -iv $encrypted_df4dabc64bbd_iv
+  -in deployment/signingkey.asc.enc -out deployment/signingkey.asc -d
