@@ -1,5 +1,6 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
+import java.edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 

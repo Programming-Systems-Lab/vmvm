@@ -1,5 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime;
 
+import java.edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.VMVMInstrumented;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ClassReinitCV;
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 import edu.columbia.cs.psl.vmvm.runtime.inst.ReflectionFixingCV;
@@ -20,20 +22,25 @@ import java.util.HashSet;
 
 public class VMVMClassFileTransformer implements ClassFileTransformer {
 
+	public static HashSet<String> ignoredClasses = new HashSet<>();
 	public static boolean isIgnoredClass(String internalName) {
 		internalName = internalName.replace('.','/');
 		if (isWhitelistedClass(internalName))
 			return false;
+		if(ignoredClasses.contains(internalName))
+			return true;
 		return
 				internalName.startsWith("java")
 						|| internalName.startsWith("jdk")
 						|| internalName.startsWith("sun/misc")
 						|| internalName.startsWith("sun/reflect")
 						|| internalName.equals("sun/java2d/opengl/OGLRenderQueue")
-//				|| internalName.startsWith("com/sun")
+						|| internalName.startsWith("sun")
+				|| internalName.startsWith("com/sun/java/util/jar")
 						|| internalName.startsWith("edu/columbia/cs/psl/vmvm/runtime")
 						|| internalName.startsWith("org/junit")
 						|| internalName.startsWith("junit/")
+						|| internalName.startsWith("java/edu/columbia/cs/psl/vmvm")
 						|| internalName.startsWith("edu/columbia/cs/psl/vmvm/")
 						|| internalName.startsWith("org/apache/maven/surefire") || internalName.startsWith("org/apache/tools/")
 						|| internalName.startsWith("org/mockito") || internalName.startsWith("mockit")
@@ -42,11 +49,11 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	}
 
 	public static boolean isWhitelistedClass(String internalName) {
-		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini") || internalName.startsWith("java/awt") || internalName.startsWith("javax/swing") || internalName.startsWith("javax/xml");
+		return internalName.startsWith("javax/servlet") || internalName.startsWith("com/sun/jini") || internalName.startsWith("java/awt") || internalName.startsWith("javax/swing") || internalName.startsWith("javax/xml") || internalName.startsWith("sun/awt");
 	}
 
 	public static boolean isClassThatNeedsReflectionHacked(String internalName) {
-		return internalName.startsWith("java/io/ObjectOutputStream") || internalName.startsWith("java/io/ObjectStream")
+		return ignoredClasses.contains(internalName) || internalName.startsWith("java/io/ObjectOutputStream") || internalName.startsWith("java/io/ObjectStream")
 				|| internalName.startsWith("sun/reflect/annotation/AnnotationInvocationHandler");
 		//		return internalName.startsWith("java/") && !internalName.startsWith("java/lang/reflect") && !internalName.equals("java/lang/Class");
 	}
@@ -54,7 +61,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	public static AdditionalInterfaceClassloader cl = new AdditionalInterfaceClassloader();
 
 	public static HashSet<String> instrumentedClasses = new HashSet<String>();
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = System.getProperty("vmvm.debug") != null;
 	public static final boolean ALWAYS_REOPT = false;
 	public static final boolean HOTSPOT_REOPT = false;
 
@@ -62,7 +69,7 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 	static sun.misc.Unsafe theUnsafe;
 
 	@SuppressWarnings("restriction")
-	static sun.misc.Unsafe getUnsafe() {
+	public static sun.misc.Unsafe getUnsafe() {
 		if (theUnsafe == null) {
 			try {
 				Field f = Unsafe.class.getDeclaredField("theUnsafe");
@@ -191,12 +198,42 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 //					System.err.println("VMVMClassfiletransformer PLAIN1 " + className + " " + loader + " " + classBeingRedefined);
 		if(className == null)
 			return null;
+		if(className.equals("org/junit/internal/requests/ClassRequest"))
+		{
+			try {
+				ClassReader cr = new ClassReader(classfileBuffer);
+				ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+				JUnitInterceptingClassVisitor cv = new JUnitInterceptingClassVisitor(cw);
+				cr.accept(cv, 0);
+				if (DEBUG) {
+					File debugDir = new File("debug");
+					if (!debugDir.exists())
+						debugDir.mkdir();
+					File f = new File("debug/" + className.replace("/", ".") + ".class");
+					FileOutputStream fos = new FileOutputStream(f);
+					fos.write(cw.toByteArray());
+					fos.close();
+				}
+				return cw.toByteArray();
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+		}
 		if (classBeingRedefined == null && isClassThatNeedsReflectionHacked(className)) {
 			try {
 				ClassReader cr = new ClassReader(classfileBuffer);
 				ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 				ReflectionFixingCV cv = new ReflectionFixingCV(cw);
 				cr.accept(cv, 0);
+				if (DEBUG) {
+					File debugDir = new File("debug");
+					if (!debugDir.exists())
+						debugDir.mkdir();
+					File f = new File("debug/" + className.replace("/", ".") + ".class");
+					FileOutputStream fos = new FileOutputStream(f);
+					fos.write(cw.toByteArray());
+					fos.close();
+				}
 				return cw.toByteArray();
 			} catch (Throwable t) {
 				t.printStackTrace();
@@ -245,7 +282,10 @@ public class VMVMClassFileTransformer implements ClassFileTransformer {
 				}
 			}
 			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-			ClassReinitCV cv = new ClassReinitCV(new CheckClassAdapter(cw, false));
+			ClassVisitor _cv = cw;
+			if(DEBUG)
+				_cv = new CheckClassAdapter(_cv, false);
+			ClassReinitCV cv = new ClassReinitCV(_cv);
 			cr.accept(cv, ClassReader.EXPAND_FRAMES);
 			byte[] ret = cw.toByteArray();
 

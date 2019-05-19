@@ -5,7 +5,7 @@ import static org.junit.Assert.assertSame;
 import org.junit.Test;
 
 import edu.columbia.cs.psl.test.vmvm.classes.EEnum;
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 
 public class EnumITCase {
 	@Test

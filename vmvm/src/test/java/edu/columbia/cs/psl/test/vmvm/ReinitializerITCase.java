@@ -11,7 +11,7 @@ import edu.columbia.cs.psl.test.vmvm.classes.IFace;
 import edu.columbia.cs.psl.test.vmvm.classes.LaterClass;
 import edu.columbia.cs.psl.test.vmvm.classes.SubClassWithAnotherSField;
 import edu.columbia.cs.psl.test.vmvm.classes.TryCatchInInitClass;
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
 
 public class ReinitializerITCase {

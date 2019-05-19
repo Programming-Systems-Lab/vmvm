@@ -8,7 +8,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.InstructionAdapter;
 
-import edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
+import java.edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
 
 public class ReflectionFixingMV extends InstructionAdapter implements Opcodes {
 

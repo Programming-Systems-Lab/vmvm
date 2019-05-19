@@ -99,7 +99,6 @@ public class Instrumenter {
 		rootOutputDir = new File(outputFolder);
 		if (!rootOutputDir.exists())
 			rootOutputDir.mkdir();
-System.out.println(inputFolder);
 		File f = new File(inputFolder);
 		if (!f.exists()) {
 			System.err.println("Unable to read path " + inputFolder);

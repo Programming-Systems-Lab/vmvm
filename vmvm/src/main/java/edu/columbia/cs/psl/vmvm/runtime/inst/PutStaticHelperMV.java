@@ -1,6 +1,6 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
+import java.edu.columbia.cs.psl.vmvm.runtime.ReflectionWrapper;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

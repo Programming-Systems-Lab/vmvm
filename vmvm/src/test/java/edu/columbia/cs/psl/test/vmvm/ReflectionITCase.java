@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithNoInterfaces;
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
-import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.testsupport.FieldGetter;
 
 public class ReflectionITCase {

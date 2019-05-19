@@ -1,7 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
-import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
+import java.edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;

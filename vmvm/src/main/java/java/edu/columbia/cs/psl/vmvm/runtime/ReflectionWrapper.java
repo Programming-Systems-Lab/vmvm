@@ -1,5 +1,6 @@
-package edu.columbia.cs.psl.vmvm.runtime;
+package java.edu.columbia.cs.psl.vmvm.runtime;
 
+import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 import sun.misc.Unsafe;
 
@@ -329,7 +330,7 @@ public class ReflectionWrapper {
 		//			synchronized (clazz) {
 		if(clazz.isArray())
 			clazz = clazz.getComponentType();
-		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName()))
+		if(VMVMClassFileTransformer.isIgnoredClass(clazz.getName().replace('.','/')))
 			return;
 		try {
 			boolean val = clazz.getField(Constants.VMVM_NEEDS_RESET).getBoolean(null);
@@ -338,7 +339,6 @@ public class ReflectionWrapper {
 				resetter.__vmvmReClinit();
 			}
 		} catch (Throwable ex) {
-			ex.printStackTrace();
 			if (!(ex instanceof NoSuchFieldException)) {
 				ex.printStackTrace();
 				System.err.println("Error on " + clazz);

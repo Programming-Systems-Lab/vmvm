@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import edu.columbia.cs.psl.test.vmvm.classes.ClassWithOneSField;
 import edu.columbia.cs.psl.test.vmvm.classes.IFace;
 import edu.columbia.cs.psl.test.vmvm.classes.SubClassWithAnotherSField;
-import edu.columbia.cs.psl.vmvm.runtime.MutableInstance;
 
 public class FieldGetter {
 	public static int getFooWithoutInit() {

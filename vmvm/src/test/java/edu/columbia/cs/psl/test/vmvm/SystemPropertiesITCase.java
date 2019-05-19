@@ -4,7 +4,7 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 
 public class SystemPropertiesITCase {
 	@Test

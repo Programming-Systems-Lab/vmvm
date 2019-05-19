@@ -1,7 +1,7 @@
 package edu.columbia.cs.psl.vmvm.runtime.inst;
 
-import edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.InterfaceReinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AnalyzerAdapter;
@@ -52,15 +52,30 @@ public class ClassReinitCV extends ClassVisitor {
 		return ownersOfStaticFields;
 	}
 
+	private HashSet<String> ignoredFields = new HashSet<>();
+	private boolean isIgnoredField(int acc, String name){
+		if(name.equals("serialVersionUID"))
+			return true;
+		if(name.equals("$VALUES") && isEnum) {
+			ignoredFields.add(name);
+			return true;
+		}
+		if((acc & Opcodes.ACC_ENUM) != 0) {
+			ignoredFields.add(name);
+			return true;
+		}
+		return false;
+	}
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-		access = access & ~Opcodes.ACC_PRIVATE;
-		access = access & ~Opcodes.ACC_PROTECTED;
-		access = access | Opcodes.ACC_PUBLIC;
-		if(!isInterface)
+		if(!isInterface && !isIgnoredField(access, name))
 			access = access & ~Opcodes.ACC_FINAL;
-		if((access & Opcodes.ACC_STATIC) != 0)
+		if((access & Opcodes.ACC_STATIC) != 0 && !isIgnoredField(access, name)) {
+			access = access & ~Opcodes.ACC_PRIVATE;
+			access = access & ~Opcodes.ACC_PROTECTED;
+			access = access | Opcodes.ACC_PUBLIC;
 			allStaticFields.add(new FieldNode(access, name, desc, signature, value));
+		}
 		return super.visitField(access, name, desc, signature, value);
 	}
 
@@ -88,7 +103,7 @@ public class ClassReinitCV extends ClassVisitor {
 		//Add signal interface
 		String[] newInterfaces = new String[interfaces.length + 1];
 		System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
-		newInterfaces[interfaces.length] = "edu/columbia/cs/psl/vmvm/runtime/VMVMInstrumented";
+		newInterfaces[interfaces.length] = "java/edu/columbia/cs/psl/vmvm/runtime/VMVMInstrumented";
 		super.visit(version, access, name, signature, superName, newInterfaces);
 	}
 
@@ -120,14 +135,14 @@ public class ClassReinitCV extends ClassVisitor {
 			classNameWField = className + "$$VMVM_RESETTER";
 
 		if (!isInterface) {
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;", null, null);
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.VMVM_NEEDS_RESET, "Z", null, null);
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, Constants.VMVM_RESET_FIELD, "L"+ InterfaceReinitializer.INTERNAL_NAME +";", null, null);
+			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT, Constants.VMVM_RESET_IN_PROGRESS, "Ljava/lang/Thread;", null, null);
+			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT, Constants.VMVM_NEEDS_RESET, "Z", null, 0);
+			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT, Constants.VMVM_RESET_FIELD, "L"+ InterfaceReinitializer.INTERNAL_NAME +";", null, null);
 		}
 		else
 		{
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, Constants.VMVM_RESET_FIELD, "L"+ InterfaceReinitializer.INTERNAL_NAME +";", null, null);
-			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL, Constants.VMVM_NEEDS_RESET, "Z", null, null);
+			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC, Constants.VMVM_RESET_FIELD, "L"+ InterfaceReinitializer.INTERNAL_NAME +";", null, null);
+			super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC, Constants.VMVM_NEEDS_RESET, "Z", null, 0);
 		}
 
 		//Create a new <clinit>
@@ -171,6 +186,17 @@ public class ClassReinitCV extends ClassVisitor {
 		} else
 			mv = super.visitMethod(Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC, "__vmvmReClinit", "()V", null, null);
 
+		if(isEnum){
+			mv = new MethodVisitor(Opcodes.ASM5, mv) {
+				@Override
+				public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+					if(opcode == Opcodes.PUTSTATIC && owner.equals(className) && ignoredFields.contains(name))
+						super.visitInsn(Opcodes.POP);
+					else
+						super.visitFieldInsn(opcode, owner, name, desc);
+				}
+			};
+		}
 		if(reClinitMethod != null)
 		{
 			reClinitMethods.put(className, reClinitMethod);

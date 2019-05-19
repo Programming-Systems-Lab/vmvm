@@ -6,7 +6,7 @@ import java.util.Locale;
 
 import org.junit.Test;
 
-import edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
+import java.edu.columbia.cs.psl.vmvm.runtime.Reinitializer;
 
 public class InternalStaticITCase {
 	@Test 

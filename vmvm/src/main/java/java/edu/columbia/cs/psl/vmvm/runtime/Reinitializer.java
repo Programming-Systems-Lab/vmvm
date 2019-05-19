@@ -1,5 +1,6 @@
-package edu.columbia.cs.psl.vmvm.runtime;
+package java.edu.columbia.cs.psl.vmvm.runtime;
 
+import edu.columbia.cs.psl.vmvm.runtime.VMVMClassFileTransformer;
 import edu.columbia.cs.psl.vmvm.runtime.inst.Constants;
 import edu.columbia.cs.psl.vmvm.runtime.inst.Utils;
 import sun.misc.Unsafe;
@@ -11,13 +12,13 @@ import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Consumer;
 
 
 public final class Reinitializer {
-	public static final String INTERNAL_NAME = "edu/columbia/cs/psl/vmvm/runtime/Reinitializer";
+	public static final String INTERNAL_NAME = "java/edu/columbia/cs/psl/vmvm/runtime/Reinitializer";
 
 	public static Instrumentation inst;
 	private static final boolean DEBUG = System.getenv("DEBUG") != null;
@@ -31,7 +32,31 @@ public final class Reinitializer {
 	}
 
 	static HashSet<Class> ignored = new HashSet<>();
-	
+
+	static String lastTestClass;
+	public static void newTestClassHit(Class c){
+		newTestClassHit(c.getName());
+	}
+	public static void newTestClassHit(String testClassName){
+		if (lastTestClass != null && !lastTestClass.equals(testClassName)) {
+			Reinitializer.markAllClassesForReinit();
+		}
+		lastTestClass = testClassName;
+	}
+
+	public static void deleteOnExitHook(){
+		try {
+			Class<?> c = Class.forName("java.io.DeleteOnExitHook");
+			Method m = c.getDeclaredMethod("runHooks");
+			m.setAccessible(true);
+			m.invoke(null);
+			Field f = c.getDeclaredField("files");
+			f.setAccessible(true);
+			f.set(null, new LinkedHashSet<String>());
+		} catch(Throwable t){
+			t.printStackTrace();
+		}
+	}
 	public static synchronized final void markAllClassesForReinit() {
 		//		long start = System.currentTimeMillis();
 		//		System.err.println("Start MCR ");
@@ -44,6 +69,7 @@ public final class Reinitializer {
 			}
 			shutdownHooks.clear();
 		}
+		deleteOnExitHook();
 		try {
 			ArrayList<MBeanServer> mbeanServers = MBeanServerFactory.findMBeanServer(null);
 			if (mbeanServers != null && mbeanServers.size() > 0) {
