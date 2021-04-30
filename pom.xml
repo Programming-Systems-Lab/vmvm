@@ -35,7 +35,7 @@
 		<java.source.line.length>150</java.source.line.length>
 
 		<license.header.file>${project.basedir}/LICENSE.md</license.header.file>
-		<junit.version>4.11</junit.version>
+		<junit.version>4.13.1</junit.version>
 		<ant.version>1.7.0</ant.version>
 		<ant.junit.version>1.9.4</ant.junit.version>
 		<mysql.connector.java.version>5.1.34</mysql.connector.java.version>
